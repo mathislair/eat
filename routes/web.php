@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\NationalityController;
 use App\Http\Controllers\Admin\NationalityGroupController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventVoteController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +36,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
     Route::delete('/events/{event}/leave', [EventController::class, 'leave'])->name('events.leave');
+
+    // Voting: attendees cast/update a ballot; the creator validates to close.
+    Route::get('/events/{event}/vote', [EventVoteController::class, 'edit'])->name('events.vote.edit');
+    Route::post('/events/{event}/vote', [EventVoteController::class, 'store'])->name('events.vote.store');
+    Route::post('/events/{event}/validate', [EventController::class, 'validate'])->name('events.validate');
 });
 
 // Admin-only management of the nationality catalogue (JSON, no front-end yet).

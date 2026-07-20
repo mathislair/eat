@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\EventStatus;
 use App\Http\Requests\JoinEventRequest;
 use App\Http\Requests\StoreEventRequest;
 use App\Models\Event;
+use App\Support\EventSummary;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -66,6 +68,8 @@ class EventController extends Controller
         $event->load(['creator', 'attendees']);
         $user = $request->user();
 
+        $hasVoted = $event->votes()->where('user_id', $user->id)->exists();
+
         return Inertia::render('Events/Show', [
             'event' => [
                 'id' => $event->id,
@@ -73,6 +77,7 @@ class EventController extends Controller
                 'date' => $event->date->toDateString(),
                 'meal' => $event->meal->value,
                 'meal_label' => $event->meal->label(),
+                'status' => $event->status->value,
                 'invite_code' => $event->invite_code,
                 'join_url' => route('events.join', $event->invite_code),
                 'creator' => ['id' => $event->creator->id, 'name' => $event->creator->name],
@@ -81,8 +86,31 @@ class EventController extends Controller
                     'name' => $a->name,
                 ]),
                 'is_creator' => $event->creator_id === $user->id,
+                'has_voted' => $hasVoted,
             ],
+            // Participation is always visible; the tally is a secret ballot,
+            // revealed only once the event is closed.
+            'participation' => [
+                'voted' => $event->votes()->count(),
+                'total' => $event->attendees->count(),
+            ],
+            'summary' => $event->isClosed() ? EventSummary::build($event) : null,
         ]);
+    }
+
+    /**
+     * Close voting and freeze the ballots (creator only, force-close allowed).
+     */
+    public function validate(Event $event): RedirectResponse
+    {
+        Gate::authorize('validate', $event);
+
+        $event->update([
+            'status' => EventStatus::Closed,
+            'validated_at' => now(),
+        ]);
+
+        return redirect()->route('events.show', $event);
     }
 
     /**

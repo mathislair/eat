@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EventStatus;
 use App\Enums\Meal;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -9,13 +10,21 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'date', 'meal', 'creator_id'])]
+#[Fillable(['name', 'date', 'meal', 'creator_id', 'status', 'validated_at'])]
 class Event extends Model
 {
     /** @use HasFactory<EventFactory> */
     use HasFactory;
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'status' => EventStatus::Voting->value,
+    ];
 
     protected static function booted(): void
     {
@@ -46,7 +55,19 @@ class Event extends Model
         return [
             'date' => 'date',
             'meal' => Meal::class,
+            'status' => EventStatus::class,
+            'validated_at' => 'datetime',
         ];
+    }
+
+    public function isVoting(): bool
+    {
+        return $this->status === EventStatus::Voting;
+    }
+
+    public function isClosed(): bool
+    {
+        return $this->status === EventStatus::Closed;
     }
 
     /**
@@ -63,5 +84,13 @@ class Event extends Model
     public function attendees(): BelongsToMany
     {
         return $this->belongsToMany(User::class)->withTimestamps();
+    }
+
+    /**
+     * @return HasMany<EventVote, $this>
+     */
+    public function votes(): HasMany
+    {
+        return $this->hasMany(EventVote::class);
     }
 }

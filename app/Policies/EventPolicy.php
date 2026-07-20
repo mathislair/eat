@@ -32,4 +32,21 @@ class EventPolicy
         return $event->creator_id !== $user->id
             && $event->attendees()->whereKey($user->id)->exists();
     }
+
+    /**
+     * An attendee may vote while the event is still open.
+     */
+    public function vote(User $user, Event $event): bool
+    {
+        return $event->isVoting()
+            && $event->attendees()->whereKey($user->id)->exists();
+    }
+
+    /**
+     * Only the creator may validate (close) an open event.
+     */
+    public function validate(User $user, Event $event): bool
+    {
+        return $event->isVoting() && $event->creator_id === $user->id;
+    }
 }
