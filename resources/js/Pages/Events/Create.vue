@@ -27,14 +27,14 @@ const submit = () => form.post(route('events.store'));
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+            <h2 class="text-xl font-bold leading-tight text-ink dark:text-cream">
                 New event
             </h2>
         </template>
 
         <div class="py-12">
             <div class="mx-auto max-w-xl sm:px-6 lg:px-8">
-                <div class="bg-white p-6 shadow-sm sm:rounded-lg dark:bg-gray-800">
+                <div class="card">
                     <form @submit.prevent="submit" class="space-y-6">
                         <div>
                             <InputLabel for="name" value="Name" />
@@ -65,7 +65,7 @@ const submit = () => form.post(route('events.store'));
                             <select
                                 id="meal"
                                 v-model="form.meal"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                                class="input"
                             >
                                 <option
                                     v-for="meal in meals"
@@ -81,7 +81,7 @@ const submit = () => form.post(route('events.store'));
                         <div class="flex items-center justify-end gap-4">
                             <Link
                                 :href="route('events.index')"
-                                class="text-sm text-gray-600 underline dark:text-gray-400"
+                                class="font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
                             >
                                 Cancel
                             </Link>

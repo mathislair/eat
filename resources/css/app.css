@@ -1,3 +1,185 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────
+ *  "eat" cartoon design system — runtime tokens
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Colours here are the ones that need to flip between light & dark. Static
+ *  brand colours (punch, sunny, mint, …) live in tailwind.config.js and are
+ *  used through utilities (bg-punch-500, text-grape-600, …).
+ */
+:root {
+    --ds-bg: #fff8ef; /* cream paper */
+    --ds-surface: #ffffff; /* cards, inputs */
+    --ds-surface-alt: #fff1dd; /* subtle fills */
+    --ds-text: #221f3b; /* ink */
+    --ds-muted: #6b647f;
+    --ds-line: #221f3b; /* outlines */
+    --ds-shadow: #221f3b; /* hard shadow colour */
+    --ds-focus: #7c5cfc; /* grape */
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --ds-bg: #14112a;
+        --ds-surface: #241f3d;
+        --ds-surface-alt: #2e2850;
+        --ds-text: #fdf6ec;
+        --ds-muted: #a79fc4;
+        --ds-line: #0c0a18;
+        --ds-shadow: #0c0a18;
+        --ds-focus: #b9a5ff;
+    }
+}
+
+@layer base {
+    body {
+        background-color: var(--ds-bg);
+        color: var(--ds-text);
+    }
+
+    /* Headings lean on the rounded display face by default. */
+    h1,
+    h2,
+    h3,
+    h4 {
+        font-family: theme('fontFamily.display');
+    }
+}
+
+@layer components {
+    /* ── Buttons ─────────────────────────────────────────────────────────
+     * Chunky, outlined, hard-shadowed. Lifts on hover, presses down on click.
+     */
+    .btn {
+        @apply inline-flex select-none items-center justify-center gap-2 rounded-xl2 border-3 px-5 py-2.5 font-display text-sm font-semibold leading-none tracking-wide transition-transform duration-100 ease-out;
+        border-color: var(--ds-line);
+        box-shadow: 3px 3px 0 0 var(--ds-shadow);
+    }
+    .btn:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 4px 4px 0 0 var(--ds-shadow);
+    }
+    .btn:active {
+        transform: translate(2px, 2px);
+        box-shadow: 1px 1px 0 0 var(--ds-shadow);
+    }
+    .btn:focus-visible {
+        outline: none;
+        box-shadow: 3px 3px 0 0 var(--ds-shadow), 0 0 0 4px var(--ds-focus);
+    }
+    .btn:disabled {
+        @apply cursor-not-allowed opacity-50;
+        transform: none;
+        box-shadow: 3px 3px 0 0 var(--ds-shadow);
+    }
+
+    .btn-primary {
+        @apply bg-punch-500 text-white;
+    }
+    .btn-primary:hover {
+        @apply bg-punch-400;
+    }
+    .btn-secondary {
+        @apply bg-sunny-300 text-ink;
+    }
+    .btn-secondary:hover {
+        @apply bg-sunny-200;
+    }
+    .btn-danger {
+        @apply bg-berry-500 text-white;
+    }
+    .btn-danger:hover {
+        @apply bg-berry-400;
+    }
+    .btn-mint {
+        @apply bg-mint-400 text-ink;
+    }
+    .btn-mint:hover {
+        @apply bg-mint-300;
+    }
+    /* Quiet button — no fill, still outlined. */
+    .btn-ghost {
+        background-color: var(--ds-surface);
+        color: var(--ds-text);
+    }
+    .btn-ghost:hover {
+        background-color: var(--ds-surface-alt);
+    }
+
+    /* ── Surfaces ────────────────────────────────────────────────────────*/
+    .card {
+        @apply rounded-blob border-3 p-6;
+        border-color: var(--ds-line);
+        background-color: var(--ds-surface);
+        box-shadow: 6px 6px 0 0 var(--ds-shadow);
+    }
+    /* Cards that behave like links — lift on hover. */
+    .card-interactive {
+        @apply transition-transform duration-100 ease-out;
+    }
+    .card-interactive:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 8px 8px 0 0 var(--ds-shadow);
+    }
+
+    .panel {
+        @apply rounded-xl2 border-3 p-5;
+        border-color: var(--ds-line);
+        background-color: var(--ds-surface);
+        box-shadow: 4px 4px 0 0 var(--ds-shadow);
+    }
+
+    /* ── Form controls ───────────────────────────────────────────────────*/
+    .label {
+        @apply mb-1.5 block font-display text-sm font-semibold;
+        color: var(--ds-text);
+    }
+
+    .input {
+        @apply block w-full rounded-xl2 border-3 px-4 py-2.5 font-sans text-sm transition-shadow duration-100;
+        border-color: var(--ds-line);
+        background-color: var(--ds-surface);
+        color: var(--ds-text);
+        box-shadow: 3px 3px 0 0 var(--ds-shadow);
+    }
+    .input::placeholder {
+        color: var(--ds-muted);
+    }
+    .input:focus {
+        outline: none;
+        border-color: var(--ds-focus);
+        box-shadow: 3px 3px 0 0 var(--ds-focus);
+    }
+
+    .checkbox {
+        @apply h-5 w-5 rounded-md border-3 text-punch-500;
+        border-color: var(--ds-line);
+        background-color: var(--ds-surface);
+    }
+    .checkbox:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px var(--ds-focus);
+    }
+
+    /* ── Badges & chips ──────────────────────────────────────────────────*/
+    .badge {
+        @apply inline-flex items-center gap-1 rounded-full border-3 px-3 py-0.5 font-display text-xs font-bold;
+        border-color: var(--ds-line);
+        box-shadow: 2px 2px 0 0 var(--ds-shadow);
+    }
+    .badge-host {
+        @apply bg-sunny-300 text-ink;
+    }
+    .badge-mint {
+        @apply bg-mint-300 text-ink;
+    }
+    .badge-grape {
+        @apply bg-grape-300 text-ink;
+    }
+    .badge-sky {
+        @apply bg-sky-300 text-ink;
+    }
+}

@@ -72,12 +72,12 @@ const leave = () => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                <h2 class="text-xl font-bold leading-tight text-ink dark:text-cream">
                     {{ event.name }}
                 </h2>
                 <Link
                     :href="route('events.index')"
-                    class="text-sm text-gray-600 underline dark:text-gray-400"
+                    class="font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
                 >
                     Back to events
                 </Link>
@@ -87,14 +87,14 @@ const leave = () => {
         <div class="py-12">
             <div class="mx-auto max-w-3xl space-y-6 sm:px-6 lg:px-8">
                 <!-- Details -->
-                <div class="bg-white p-6 shadow-sm sm:rounded-lg dark:bg-gray-800">
+                <div class="card">
                     <div class="flex items-start gap-4">
-                        <span class="text-4xl">{{ mealEmoji[event.meal] }}</span>
+                        <span class="text-5xl">{{ mealEmoji[event.meal] }}</span>
                         <div>
-                            <p class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                            <p class="font-display text-lg font-bold text-ink dark:text-cream">
                                 {{ formatDate(event.date) }}
                             </p>
-                            <p class="text-gray-600 dark:text-gray-400">
+                            <p class="font-semibold text-ink-muted dark:text-gray-400">
                                 {{ event.meal_label }} · hosted by {{ event.creator.name }}
                             </p>
                         </div>
@@ -195,13 +195,13 @@ const leave = () => {
                 </div>
 
                 <!-- Invite -->
-                <div class="bg-white p-6 shadow-sm sm:rounded-lg dark:bg-gray-800">
-                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <div class="card">
+                    <h3 class="font-display text-sm font-bold uppercase tracking-wide text-ink-muted dark:text-gray-300">
                         Invite code
                     </h3>
-                    <div class="mt-2 flex items-center gap-3">
+                    <div class="mt-3 flex items-center gap-3">
                         <code
-                            class="rounded bg-gray-100 px-3 py-2 font-mono text-lg tracking-widest text-gray-900 dark:bg-gray-900 dark:text-gray-100"
+                            class="rounded-xl2 border-3 border-ink bg-sunny-200 px-3 py-2 font-mono text-lg font-bold tracking-widest text-ink"
                         >
                             {{ event.invite_code }}
                         </code>
@@ -209,28 +209,28 @@ const leave = () => {
                             {{ copied ? 'Copied!' : 'Copy code' }}
                         </SecondaryButton>
                     </div>
-                    <p class="mt-2 break-all text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-3 break-all text-xs font-semibold text-ink-muted dark:text-gray-400">
                         Share link: {{ event.join_url }}
                     </p>
                 </div>
 
                 <!-- Attendees -->
-                <div class="bg-white p-6 shadow-sm sm:rounded-lg dark:bg-gray-800">
-                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <div class="card">
+                    <h3 class="font-display text-sm font-bold uppercase tracking-wide text-ink-muted dark:text-gray-300">
                         Guests ({{ event.attendees.length }})
                     </h3>
-                    <ul class="mt-3 divide-y divide-gray-100 dark:divide-gray-700">
+                    <ul class="mt-3 divide-y-2 divide-dashed divide-ink/15 dark:divide-cream/15">
                         <li
                             v-for="attendee in event.attendees"
                             :key="attendee.id"
-                            class="flex items-center justify-between py-2"
+                            class="flex items-center justify-between py-2.5"
                         >
-                            <span class="text-gray-900 dark:text-gray-100">
+                            <span class="font-semibold text-ink dark:text-cream">
                                 {{ attendee.name }}
                             </span>
                             <span
                                 v-if="attendee.id === event.creator.id"
-                                class="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200"
+                                class="badge badge-host"
                             >
                                 Host
                             </span>
