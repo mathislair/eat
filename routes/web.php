@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\NationalityController;
+use App\Http\Controllers\Admin\NationalityGroupController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -33,6 +35,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
     Route::delete('/events/{event}/leave', [EventController::class, 'leave'])->name('events.leave');
+});
+
+// Admin-only management of the nationality catalogue (JSON, no front-end yet).
+Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::apiResource('nationalities', NationalityController::class)
+        ->only(['index', 'store', 'update', 'destroy']);
+    Route::apiResource('nationality-groups', NationalityGroupController::class)
+        ->only(['index', 'store', 'update', 'destroy']);
 });
 
 require __DIR__.'/auth.php';

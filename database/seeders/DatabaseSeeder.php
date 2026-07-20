@@ -16,11 +16,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Catalogue of nationalities and their groups (Asian, Spicy, …).
+        $this->call(NationalitySeeder::class);
+
         $users = User::factory(10)->create();
 
         $test = User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'is_admin' => true,
         ]);
 
         // A couple of events hosted by the test user, each with a few guests.
