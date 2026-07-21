@@ -23,6 +23,14 @@ const shadows = ['cartoon-xs', 'cartoon-sm', 'cartoon', 'cartoon-lg', 'cartoon-x
 const sample = ref('Team dinner');
 const checked = ref(true);
 
+// Toggleable chips (multi-select), mirrors the vote criteria picker.
+const chipOptions = ['Cheap', 'Veggie', 'Spicy', 'Cozy', 'Fancy'];
+const selectedChips = ref(['Veggie', 'Cozy']);
+const toggleChip = (opt) => {
+    const i = selectedChips.value.indexOf(opt);
+    i === -1 ? selectedChips.value.push(opt) : selectedChips.value.splice(i, 1);
+};
+
 const sectionTitle =
     'mb-4 font-display text-sm font-bold uppercase tracking-widest text-ink-muted dark:text-gray-400';
 </script>
@@ -151,6 +159,29 @@ const sectionTitle =
                     <span class="badge badge-mint">Going</span>
                     <span class="badge badge-grape">Maybe</span>
                     <span class="badge badge-sky">Invited</span>
+                </div>
+            </section>
+
+            <!-- Chips -->
+            <section>
+                <h2 :class="sectionTitle">Chips</h2>
+                <div class="card space-y-4">
+                    <div class="flex flex-wrap gap-2">
+                        <button
+                            v-for="opt in chipOptions"
+                            :key="opt"
+                            type="button"
+                            class="chip"
+                            :class="{ 'chip-selected': selectedChips.includes(opt) }"
+                            @click="toggleChip(opt)"
+                        >
+                            {{ opt }}
+                        </button>
+                    </div>
+                    <p class="text-sm font-semibold text-ink-muted dark:text-gray-400">
+                        Toggleable multi-select pills — click to pick. Used for the
+                        vote criteria picker.
+                    </p>
                 </div>
             </section>
 
