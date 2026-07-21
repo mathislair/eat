@@ -95,19 +95,34 @@ const critLabel = (type, value) => {
     return group?.options.find((o) => o.value === value)?.label ?? value;
 };
 
-const picks = computed(() => {
+const splitPrefs = (entries, labelFn) => {
     const wants = [];
     const avoids = [];
-    for (const [id, pref] of Object.entries(form.nationalities)) {
-        (pref === 'want' ? wants : avoids).push(natName(id));
-    }
-    for (const group of props.criteriaTypes) {
-        for (const [value, pref] of Object.entries(form.criteria[group.type] ?? {})) {
-            (pref === 'want' ? wants : avoids).push(critLabel(group.type, value));
-        }
+    for (const [key, pref] of entries) {
+        (pref === 'want' ? wants : avoids).push(labelFn(key));
     }
     return { wants, avoids };
-});
+};
+
+// Per-step recap for the review screen — each block links back to its step so
+// a voter can jump straight in and tweak it.
+const recap = computed(() =>
+    steps.value
+        .filter((s) => s.kind !== 'review')
+        .map((s, i) => ({
+            index: i,
+            emoji: s.emoji,
+            label: s.label,
+            ...(s.kind === 'cuisines'
+                ? splitPrefs(Object.entries(form.nationalities), natName)
+                : splitPrefs(
+                      Object.entries(form.criteria[s.group.type] ?? {}),
+                      (v) => critLabel(s.group.type, v),
+                  )),
+        })),
+);
+
+const isEmpty = computed(() => wantCount.value === 0 && avoidCount.value === 0);
 
 const submit = () => form.post(route('events.vote.store', props.event.id));
 </script>
@@ -236,32 +251,69 @@ const submit = () => form.post(route('events.vote.store', props.event.id));
                             </div>
 
                             <!-- Review -->
-                            <div v-else class="mt-5 space-y-4">
-                                <div class="rounded-xl2 border-3 border-ink bg-mint-100 p-4 dark:bg-ink-700">
-                                    <p class="font-display text-sm font-bold text-mint-600">
-                                        🟢 You want ({{ picks.wants.length }})
+                            <div v-else class="mt-5 space-y-3">
+                                <!-- Headline -->
+                                <div
+                                    class="rounded-xl2 border-3 border-ink px-4 py-3 shadow-cartoon-xs"
+                                    :class="isEmpty ? 'bg-sunny-200' : 'bg-mint-200'"
+                                >
+                                    <p class="font-display text-base font-bold text-ink">
+                                        {{ isEmpty ? "🤷 You're easy — anything goes" : "🎉 You're all set!" }}
                                     </p>
-                                    <div v-if="picks.wants.length" class="mt-2 flex flex-wrap gap-2">
-                                        <span v-for="(label, i) in picks.wants" :key="`w${i}`" class="badge badge-mint">
-                                            {{ label }}
-                                        </span>
-                                    </div>
-                                    <p v-else class="mt-1 text-sm font-semibold text-ink-muted dark:text-gray-300">
-                                        Nothing yet — you're easy to please!
+                                    <p class="mt-0.5 text-sm font-semibold text-ink/80">
+                                        <template v-if="isEmpty">
+                                            You haven't picked anything, so you'll count as neutral on
+                                            everything. Tap Edit to add a craving or a veto.
+                                        </template>
+                                        <template v-else>
+                                            {{ wantCount }} to love · {{ avoidCount }} to veto. Tap Edit to
+                                            tweak, then submit.
+                                        </template>
                                     </p>
                                 </div>
 
-                                <div class="rounded-xl2 border-3 border-ink bg-berry-100 p-4 dark:bg-ink-700">
-                                    <p class="font-display text-sm font-bold text-berry-600">
-                                        🔴 You veto ({{ picks.avoids.length }})
-                                    </p>
-                                    <div v-if="picks.avoids.length" class="mt-2 flex flex-wrap gap-2">
-                                        <span v-for="(label, i) in picks.avoids" :key="`a${i}`" class="badge badge-berry">
-                                            {{ label }}
+                                <!-- Per-category breakdown -->
+                                <div
+                                    v-for="section in recap"
+                                    :key="section.label"
+                                    class="rounded-xl2 border-3 border-ink bg-cream-200 p-4 dark:bg-ink-700"
+                                >
+                                    <div class="flex items-center justify-between gap-2">
+                                        <p class="font-display text-sm font-bold text-ink dark:text-cream">
+                                            {{ section.emoji }} {{ section.label }}
+                                        </p>
+                                        <button
+                                            type="button"
+                                            class="font-display text-xs font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
+                                            @click="goTo(section.index)"
+                                        >
+                                            Edit
+                                        </button>
+                                    </div>
+                                    <div
+                                        v-if="section.wants.length || section.avoids.length"
+                                        class="mt-2 flex flex-wrap gap-2"
+                                    >
+                                        <span
+                                            v-for="(label, i) in section.wants"
+                                            :key="`w${i}`"
+                                            class="badge badge-mint"
+                                        >
+                                            🟢 {{ label }}
+                                        </span>
+                                        <span
+                                            v-for="(label, i) in section.avoids"
+                                            :key="`a${i}`"
+                                            class="badge badge-berry"
+                                        >
+                                            🔴 {{ label }}
                                         </span>
                                     </div>
-                                    <p v-else class="mt-1 text-sm font-semibold text-ink-muted dark:text-gray-300">
-                                        No vetoes — anything goes.
+                                    <p
+                                        v-else
+                                        class="mt-1 text-sm font-semibold text-ink-muted dark:text-gray-300"
+                                    >
+                                        No preference — you're neutral here.
                                     </p>
                                 </div>
                             </div>
