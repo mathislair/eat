@@ -182,4 +182,26 @@
     .badge-sky {
         @apply bg-sky-300 text-ink;
     }
+
+    /* ── Chips (toggleable) ──────────────────────────────────────────────
+     * Interactive pills for multi-select filters & vote options.
+     */
+    .chip {
+        @apply inline-flex cursor-pointer select-none items-center gap-1 rounded-full border-3 px-3 py-1 font-display text-sm font-semibold transition-transform duration-100 ease-out;
+        border-color: var(--ds-line);
+        background-color: var(--ds-surface);
+        color: var(--ds-text);
+    }
+    .chip:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 2px 2px 0 0 var(--ds-shadow);
+    }
+    .chip:active {
+        transform: translate(1px, 1px);
+        box-shadow: none;
+    }
+    .chip-selected {
+        @apply bg-punch-500 text-white;
+        box-shadow: 2px 2px 0 0 var(--ds-shadow);
+    }
 }

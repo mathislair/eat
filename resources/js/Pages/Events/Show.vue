@@ -102,24 +102,18 @@ const leave = () => {
                 </div>
 
                 <!-- Voting (open) -->
-                <div
-                    v-if="event.status === 'voting'"
-                    class="bg-white p-6 shadow-sm sm:rounded-lg dark:bg-gray-800"
-                >
-                    <div class="flex items-center justify-between">
+                <div v-if="event.status === 'voting'" class="card">
+                    <div class="flex items-center justify-between gap-3">
                         <div>
-                            <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
-                                Voting open
+                            <h3 class="font-display text-lg font-bold text-ink dark:text-cream">
+                                Voting open 🗳️
                             </h3>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                            <p class="mt-1 text-sm font-semibold text-ink-muted dark:text-gray-400">
                                 {{ participation.voted }}/{{ participation.total }} voted ·
                                 results hidden until the host validates
                             </p>
                         </div>
-                        <span
-                            v-if="event.has_voted"
-                            class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-200"
-                        >
+                        <span v-if="event.has_voted" class="badge badge-mint">
                             You voted
                         </span>
                     </div>
@@ -136,61 +130,58 @@ const leave = () => {
                 </div>
 
                 <!-- Summary (closed) -->
-                <div
-                    v-else-if="summary"
-                    class="bg-white p-6 shadow-sm sm:rounded-lg dark:bg-gray-800"
-                >
-                    <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
-                        Summary
+                <div v-else-if="summary" class="card">
+                    <h3 class="font-display text-lg font-bold text-ink dark:text-cream">
+                        Summary ✨
                     </h3>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm font-semibold text-ink-muted dark:text-gray-400">
                         {{ summary.participation.voted }}/{{ summary.participation.total }} voted
                     </p>
 
-                    <h4 class="mt-5 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <h4 class="mt-5 font-display text-sm font-bold uppercase tracking-wide text-ink-muted dark:text-gray-300">
                         Nationalities
                     </h4>
-                    <ol
-                        v-if="summary.nationalities.length"
-                        class="mt-2 space-y-1"
-                    >
+                    <ol v-if="summary.nationalities.length" class="mt-2 space-y-2">
                         <li
                             v-for="(n, i) in summary.nationalities"
                             :key="n.id"
-                            class="flex items-center justify-between rounded px-3 py-2"
-                            :class="i === 0 ? 'bg-indigo-50 dark:bg-indigo-950' : ''"
+                            class="flex items-center justify-between rounded-xl2 border-3 px-3 py-2"
+                            :class="i === 0
+                                ? 'border-ink bg-sunny-200 shadow-cartoon-xs'
+                                : 'border-transparent bg-cream-200 dark:bg-ink-700'"
                         >
-                            <span class="text-gray-900 dark:text-gray-100">
+                            <span class="font-semibold text-ink dark:text-cream">
                                 <span v-if="i === 0">🏆 </span>{{ n.name }}
                             </span>
-                            <span class="text-sm text-gray-500 dark:text-gray-400">
+                            <span class="text-sm font-bold text-ink-muted dark:text-gray-400">
                                 {{ n.votes }} {{ n.votes === 1 ? 'vote' : 'votes' }}
                             </span>
                         </li>
                     </ol>
-                    <p v-else class="mt-2 text-sm text-gray-500 dark:text-gray-400">No votes.</p>
+                    <p v-else class="mt-2 text-sm font-semibold text-ink-muted dark:text-gray-400">
+                        No votes.
+                    </p>
 
                     <div
                         v-for="(items, type) in summary.criteria"
                         :key="type"
                         class="mt-5"
                     >
-                        <h4 class="text-sm font-medium capitalize text-gray-700 dark:text-gray-300">
+                        <h4 class="font-display text-sm font-bold uppercase capitalize tracking-wide text-ink-muted dark:text-gray-300">
                             {{ type }}
                         </h4>
                         <div v-if="items.length" class="mt-2 flex flex-wrap gap-2">
                             <span
                                 v-for="(item, i) in items"
                                 :key="item.value"
-                                class="rounded-full px-3 py-1 text-sm"
-                                :class="i === 0
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200'"
+                                class="badge"
+                                :class="i === 0 ? 'bg-punch-500 text-white' : 'bg-cream-200 text-ink dark:bg-ink-700 dark:text-cream'"
                             >
+                                <span v-if="i === 0">🏆</span>
                                 {{ item.label }} · {{ item.votes }}
                             </span>
                         </div>
-                        <p v-else class="mt-2 text-sm text-gray-500 dark:text-gray-400">—</p>
+                        <p v-else class="mt-2 text-sm font-semibold text-ink-muted dark:text-gray-400">—</p>
                     </div>
                 </div>
 

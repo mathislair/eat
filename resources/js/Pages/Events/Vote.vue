@@ -48,12 +48,12 @@ const submit = () => form.post(route('events.vote.store', props.event.id));
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                <h2 class="text-xl font-bold leading-tight text-ink dark:text-cream">
                     Vote — {{ event.name }}
                 </h2>
                 <Link
                     :href="route('events.show', event.id)"
-                    class="text-sm text-gray-600 underline dark:text-gray-400"
+                    class="font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
                 >
                     Back to event
                 </Link>
@@ -63,12 +63,12 @@ const submit = () => form.post(route('events.vote.store', props.event.id));
         <div class="py-12">
             <form @submit.prevent="submit" class="mx-auto max-w-3xl space-y-6 sm:px-6 lg:px-8">
                 <!-- Nationalities -->
-                <div class="bg-white p-6 shadow-sm sm:rounded-lg dark:bg-gray-800">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+                <div class="card">
+                    <div class="flex items-center justify-between gap-3">
+                        <h3 class="font-display text-lg font-bold text-ink dark:text-cream">
                             Nationalities
                         </h3>
-                        <span class="text-sm text-gray-500 dark:text-gray-400">
+                        <span class="badge badge-grape">
                             {{ form.nationalities.length }} selected
                         </span>
                     </div>
@@ -82,15 +82,15 @@ const submit = () => form.post(route('events.vote.store', props.event.id));
                         <label
                             v-for="n in filteredNationalities"
                             :key="n.id"
-                            class="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-gray-50 dark:hover:bg-gray-700"
+                            class="flex cursor-pointer items-center gap-2 rounded-xl2 px-2 py-1.5 transition-colors hover:bg-cream-200 dark:hover:bg-ink-700"
                         >
                             <input
                                 type="checkbox"
                                 :checked="form.nationalities.includes(n.id)"
-                                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900"
+                                class="checkbox"
                                 @change="toggleNationality(n.id)"
                             />
-                            <span class="text-sm text-gray-800 dark:text-gray-200">{{ n.name }}</span>
+                            <span class="text-sm font-semibold text-ink dark:text-cream">{{ n.name }}</span>
                         </label>
                     </div>
                 </div>
@@ -99,9 +99,9 @@ const submit = () => form.post(route('events.vote.store', props.event.id));
                 <div
                     v-for="group in criteriaTypes"
                     :key="group.type"
-                    class="bg-white p-6 shadow-sm sm:rounded-lg dark:bg-gray-800"
+                    class="card"
                 >
-                    <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+                    <h3 class="font-display text-lg font-bold text-ink dark:text-cream">
                         {{ group.label }}
                     </h3>
                     <div class="mt-3 flex flex-wrap gap-2">
@@ -109,10 +109,8 @@ const submit = () => form.post(route('events.vote.store', props.event.id));
                             v-for="option in group.options"
                             :key="option.value"
                             type="button"
-                            class="rounded-full border px-3 py-1 text-sm transition"
-                            :class="isChecked(group.type, option.value)
-                                ? 'border-indigo-500 bg-indigo-600 text-white'
-                                : 'border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'"
+                            class="chip"
+                            :class="{ 'chip-selected': isChecked(group.type, option.value) }"
                             @click="toggleCriterion(group.type, option.value)"
                         >
                             {{ option.label }}
@@ -123,7 +121,7 @@ const submit = () => form.post(route('events.vote.store', props.event.id));
                 <div class="flex items-center justify-end gap-4">
                     <Link
                         :href="route('events.show', event.id)"
-                        class="text-sm text-gray-600 underline dark:text-gray-400"
+                        class="font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
                     >
                         Cancel
                     </Link>
