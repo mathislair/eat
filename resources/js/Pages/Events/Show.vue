@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
+import Tabs from '@/Components/Tabs.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
@@ -24,6 +25,30 @@ const props = defineProps({
         default: null,
     },
 });
+
+// Two focused views instead of one long scroll: "Status" holds the vote /
+// verdict / restaurant reveal, "Guests" holds the invite code and attendee
+// list. A brand-new event still gathering people opens on Guests so the
+// invite code is front-and-centre; otherwise the status is what matters.
+const activeTab = ref(
+    props.event.status === 'voting' && props.participation.voted === 0
+        ? 'people'
+        : 'status',
+);
+
+const tabs = computed(() => [
+    {
+        key: 'status',
+        label: 'Status',
+        icon: props.event.status === 'voting' ? '🗳️' : '✨',
+    },
+    {
+        key: 'people',
+        label: 'Guests',
+        icon: '👥',
+        count: props.event.attendees.length,
+    },
+]);
 
 const validate = () => {
     if (confirm('Close voting and reveal the summary? Votes will be frozen.')) {
@@ -95,7 +120,7 @@ const leave = () => {
         </template>
 
         <div class="space-y-4">
-            <!-- Details -->
+            <!-- Details — the event's identity, pinned above the tabs. -->
             <div class="card">
                     <div class="flex items-start gap-4">
                         <span class="text-5xl">{{ mealEmoji[event.meal] }}</span>
@@ -110,6 +135,13 @@ const leave = () => {
                     </div>
                 </div>
 
+                <!-- Split the dense hub into two focused views. -->
+                <Tabs v-model="activeTab" :tabs="tabs" />
+
+                <!-- Panel re-keys on switch so it pops back in. -->
+                <div :key="activeTab" class="animate-pop-in space-y-4">
+                <!-- ── Status: the vote, the verdict, the reveal ────────── -->
+                <template v-if="activeTab === 'status'">
                 <!-- Voting (open) -->
                 <div v-if="event.status === 'voting'" class="card">
                     <div class="flex items-center justify-between gap-3">
@@ -261,7 +293,10 @@ const leave = () => {
                         </Link>
                     </div>
                 </div>
+                </template>
 
+                <!-- ── Guests: invite code + attendee list ──────────────── -->
+                <template v-else>
                 <!-- Invite -->
                 <div class="card">
                     <h3 class="font-display text-sm font-bold uppercase tracking-wide text-ink-muted dark:text-gray-300">
@@ -305,8 +340,10 @@ const leave = () => {
                         </li>
                     </ul>
                 </div>
+                </template>
+                </div>
 
-                <!-- Actions -->
+                <!-- Actions — always reachable, whichever tab is open. -->
                 <div class="flex justify-end">
                     <DangerButton v-if="event.is_creator" @click="destroy">
                         Delete event
