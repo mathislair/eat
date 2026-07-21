@@ -1,7 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
 defineProps({
@@ -37,18 +36,13 @@ const openHref = (event) =>
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-3">
                 <h2 class="text-xl font-bold leading-tight text-ink dark:text-cream">
-                    Events
+                    Your events
                 </h2>
-                <div class="flex gap-2">
-                    <Link :href="route('events.join')">
-                        <SecondaryButton>Join with code</SecondaryButton>
-                    </Link>
-                    <Link :href="route('events.create')">
-                        <PrimaryButton>New event</PrimaryButton>
-                    </Link>
-                </div>
+                <Link :href="route('events.create')">
+                    <PrimaryButton>+ New</PrimaryButton>
+                </Link>
             </div>
         </template>
 
