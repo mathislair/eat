@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -83,15 +84,14 @@ const leave = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="min-w-0 flex-1 truncate text-lg font-bold leading-tight text-ink dark:text-cream">
-                {{ event.name }}
-            </h2>
-            <Link
-                :href="route('events.index')"
-                class="shrink-0 font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
-            >
-                Events
-            </Link>
+            <PageHeader :title="event.name">
+                <Link
+                    :href="route('events.index')"
+                    class="shrink-0 font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
+                >
+                    Events
+                </Link>
+            </PageHeader>
         </template>
 
         <div class="space-y-4">

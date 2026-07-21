@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, nextTick, ref } from 'vue';
@@ -105,15 +106,14 @@ const refresh = () => router.reload({ only: ['restaurants', 'match', 'leader', '
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="min-w-0 flex-1 truncate text-lg font-bold leading-tight text-ink dark:text-cream">
-                Pick a place — {{ event.name }}
-            </h2>
-            <Link
-                :href="route('events.hub', event.id)"
-                class="shrink-0 font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
-            >
-                Back
-            </Link>
+            <PageHeader :title="`Pick a place — ${event.name}`">
+                <Link
+                    :href="route('events.hub', event.id)"
+                    class="shrink-0 font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
+                >
+                    Back
+                </Link>
+            </PageHeader>
         </template>
 
         <div class="space-y-4">
