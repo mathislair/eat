@@ -131,59 +131,55 @@ const submit = () => form.post(route('events.vote.store', props.event.id));
     <Head :title="`Vote — ${event.name}`" />
 
     <AuthenticatedLayout>
+        <!-- The stepper + status bar replaces the title in the app bar. -->
         <template #header>
-            <h2 class="min-w-0 flex-1 truncate text-lg font-bold leading-tight text-ink dark:text-cream">
-                Vote — {{ event.name }}
-            </h2>
-            <Link
-                :href="route('events.hub', event.id)"
-                class="shrink-0 font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
-            >
-                Back
-            </Link>
-        </template>
-
-        <div class="space-y-4">
-            <!-- Progress + legend -->
-            <div class="card">
-                    <div class="flex items-center justify-between gap-3">
-                        <p class="font-display text-sm font-bold text-ink-muted dark:text-gray-300">
-                            Step {{ stepIndex + 1 }} of {{ steps.length }}
-                        </p>
-                        <div class="flex items-center gap-2">
-                            <span v-if="wantCount" class="badge badge-mint">🟢 {{ wantCount }}</span>
-                            <span v-if="avoidCount" class="badge badge-berry">🔴 {{ avoidCount }}</span>
-                        </div>
-                    </div>
-
-                    <!-- Progress bar -->
-                    <div class="mt-2 h-3.5 overflow-hidden rounded-full border-3 border-ink bg-cream-200 dark:bg-ink-700">
-                        <div
-                            class="h-full rounded-full bg-mint-400 transition-all duration-300 ease-out"
-                            :style="{ width: `${progress}%` }"
-                        />
-                    </div>
-
-                    <!-- Step dots -->
-                    <div class="mt-3 flex flex-wrap gap-2">
-                        <button
-                            v-for="(s, i) in steps"
-                            :key="s.key"
-                            type="button"
-                            class="wizard-dot"
-                            :class="{
-                                'wizard-dot--active': i === stepIndex,
-                                'wizard-dot--done': i < stepIndex,
-                            }"
-                            :title="s.label"
-                            :aria-label="`Go to ${s.label}`"
-                            @click="goTo(i)"
+            <div class="py-3">
+                <div class="flex items-center justify-between gap-3">
+                    <p class="font-display text-sm font-bold text-ink-muted dark:text-gray-300">
+                        Step {{ stepIndex + 1 }} of {{ steps.length }}
+                    </p>
+                    <div class="flex items-center gap-2">
+                        <span v-if="wantCount" class="badge badge-mint">🟢 {{ wantCount }}</span>
+                        <span v-if="avoidCount" class="badge badge-berry">🔴 {{ avoidCount }}</span>
+                        <Link
+                            :href="route('events.hub', event.id)"
+                            class="shrink-0 font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
                         >
-                            <span aria-hidden="true">{{ s.emoji }}</span>
-                        </button>
+                            Exit
+                        </Link>
                     </div>
                 </div>
 
+                <!-- Progress bar -->
+                <div class="mt-2 h-3 overflow-hidden rounded-full border-3 border-ink bg-cream-200 dark:bg-ink-700">
+                    <div
+                        class="h-full rounded-full bg-mint-400 transition-all duration-300 ease-out"
+                        :style="{ width: `${progress}%` }"
+                    />
+                </div>
+
+                <!-- Step dots -->
+                <div class="mt-2.5 flex flex-wrap gap-2">
+                    <button
+                        v-for="(s, i) in steps"
+                        :key="s.key"
+                        type="button"
+                        class="wizard-dot"
+                        :class="{
+                            'wizard-dot--active': i === stepIndex,
+                            'wizard-dot--done': i < stepIndex,
+                        }"
+                        :title="s.label"
+                        :aria-label="`Go to ${s.label}`"
+                        @click="goTo(i)"
+                    >
+                        <span aria-hidden="true">{{ s.emoji }}</span>
+                    </button>
+                </div>
+            </div>
+        </template>
+
+        <div class="space-y-4">
                 <!-- Step card -->
                 <div class="card overflow-hidden">
                     <Transition :name="direction === 'next' ? 'step-next' : 'step-prev'" mode="out-in">

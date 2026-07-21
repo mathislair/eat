@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PageTitle from '@/Components/PageTitle.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -26,11 +27,7 @@ const submit = () => form.post(route('events.store'));
     <Head title="New event" />
 
     <AuthenticatedLayout>
-        <template #header>
-            <h2 class="min-w-0 flex-1 truncate text-lg font-bold leading-tight text-ink dark:text-cream">
-                New event
-            </h2>
-        </template>
+        <PageTitle title="New event" />
 
         <div class="card">
             <form @submit.prevent="submit" class="space-y-6">

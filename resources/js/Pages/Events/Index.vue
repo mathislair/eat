@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PageTitle from '@/Components/PageTitle.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
@@ -35,14 +36,11 @@ const openHref = (event) =>
     <Head title="Events" />
 
     <AuthenticatedLayout>
-        <template #header>
-            <h2 class="min-w-0 flex-1 truncate text-lg font-bold leading-tight text-ink dark:text-cream">
-                Your events
-            </h2>
+        <PageTitle title="Your events">
             <Link :href="route('events.create')" class="shrink-0">
                 <PrimaryButton>+ New</PrimaryButton>
             </Link>
-        </template>
+        </PageTitle>
 
         <div
             v-if="events.length === 0"

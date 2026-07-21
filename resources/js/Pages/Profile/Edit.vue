@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PageTitle from '@/Components/PageTitle.vue';
 import DeleteUserForm from './Partials/DeleteUserForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
@@ -21,11 +22,7 @@ const user = usePage().props.auth.user;
     <Head title="Profile" />
 
     <AuthenticatedLayout>
-        <template #header>
-            <h2 class="min-w-0 flex-1 truncate text-lg font-bold leading-tight text-ink dark:text-cream">
-                Profile
-            </h2>
-        </template>
+        <PageTitle title="Profile" />
 
         <div class="space-y-4">
             <!-- Account summary -->
