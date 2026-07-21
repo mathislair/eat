@@ -6,7 +6,8 @@ import DangerButton from '@/Components/DangerButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import Checkbox from '@/Components/Checkbox.vue';
-import { ref } from 'vue';
+import PreferenceTile from '@/Components/PreferenceTile.vue';
+import { reactive, ref } from 'vue';
 
 // Brand scales exposed as Tailwind utilities (see tailwind.config.js).
 const palettes = [
@@ -33,6 +34,14 @@ const toggleChip = (opt) => {
 
 const sectionTitle =
     'mb-4 font-display text-sm font-bold uppercase tracking-widest text-ink-muted dark:text-gray-400';
+
+// Three-state preference tiles (neutral → want → avoid), the vote's core.
+const prefOptions = ['Italian', 'Thai', 'Sushi', '€€', 'Spicy', 'Vegan'];
+const prefs = reactive({ Thai: 'want', Spicy: 'avoid' });
+const setPref = (opt, value) => {
+    if (value === 'neutral') delete prefs[opt];
+    else prefs[opt] = value;
+};
 </script>
 
 <template>
@@ -181,6 +190,28 @@ const sectionTitle =
                     <p class="text-sm font-semibold text-ink-muted dark:text-gray-400">
                         Toggleable multi-select pills — click to pick. Used for the
                         vote criteria picker.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Preference tiles -->
+            <section>
+                <h2 :class="sectionTitle">Preference tiles</h2>
+                <div class="card space-y-4">
+                    <div class="grid grid-cols-3 gap-2.5 sm:grid-cols-6">
+                        <PreferenceTile
+                            v-for="opt in prefOptions"
+                            :key="opt"
+                            :label="opt"
+                            :model-value="prefs[opt] ?? 'neutral'"
+                            @update:model-value="(v) => setPref(opt, v)"
+                        />
+                    </div>
+                    <p class="text-sm font-semibold text-ink-muted dark:text-gray-400">
+                        Square, three-state buttons — tap to cycle neutral →
+                        <span class="font-bold text-mint-600">want 🟢</span> →
+                        <span class="font-bold text-berry-600">avoid 🔴</span>. Powers
+                        the immersive vote; every ballot is a wall of these.
                     </p>
                 </div>
             </section>

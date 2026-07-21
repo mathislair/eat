@@ -49,7 +49,8 @@ class EventVote extends Model
      */
     public function nationalities(): BelongsToMany
     {
-        return $this->belongsToMany(Nationality::class, 'event_vote_nationality');
+        return $this->belongsToMany(Nationality::class, 'event_vote_nationality')
+            ->withPivot('preference');
     }
 
     /**

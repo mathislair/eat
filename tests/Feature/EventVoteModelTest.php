@@ -4,12 +4,13 @@ namespace Tests\Feature;
 
 use App\Enums\AttributeType;
 use App\Enums\EventStatus;
+use App\Enums\VotePreference;
 use App\Models\Event;
 use App\Models\EventVote;
 use App\Models\Nationality;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class EventVoteModelTest extends TestCase
@@ -57,11 +58,22 @@ class EventVoteModelTest extends TestCase
     {
         $vote = EventVote::factory()->create();
 
-        $vote->criteria()->create(['type' => 'diet', 'value' => 'vegan']);
+        $vote->criteria()->create(['type' => 'diet', 'value' => 'vegan', 'preference' => 'avoid']);
 
         $criterion = $vote->criteria()->first();
         $this->assertSame(AttributeType::Diet, $criterion->type);
         $this->assertSame('vegan', $criterion->value);
+        $this->assertSame(VotePreference::Avoid, $criterion->preference);
+    }
+
+    public function test_a_nationality_pick_carries_its_preference_on_the_pivot(): void
+    {
+        $vote = EventVote::factory()->create();
+        $nationality = Nationality::factory()->create();
+
+        $vote->nationalities()->attach($nationality, ['preference' => 'avoid']);
+
+        $this->assertSame('avoid', $vote->nationalities()->first()->pivot->preference);
     }
 
     public function test_a_user_can_only_have_one_ballot_per_event(): void
@@ -70,7 +82,7 @@ class EventVoteModelTest extends TestCase
         $user = User::factory()->create();
         EventVote::factory()->create(['event_id' => $event->id, 'user_id' => $user->id]);
 
-        $this->expectException(\Illuminate\Database\UniqueConstraintViolationException::class);
+        $this->expectException(UniqueConstraintViolationException::class);
         EventVote::factory()->create(['event_id' => $event->id, 'user_id' => $user->id]);
     }
 }

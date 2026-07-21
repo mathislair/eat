@@ -7,9 +7,11 @@ use App\Models\Event;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Aggregates a closed event's ballots into a shareable summary: nationalities
- * ranked by votes, criteria tallied per type, and participation. Pure read —
- * computed on the fly, since votes are frozen once the event is closed.
+ * Aggregates a closed event's ballots into a shareable summary and, above all,
+ * a group decision: every option is scored by how the room felt about it —
+ * "want" (🟢) lifts it, "avoid" (🔴) drags it down. The highest net score is
+ * where the group is heading. Pure read, computed on the fly since votes are
+ * frozen once the event is closed.
  */
 class EventSummary
 {
@@ -29,7 +31,7 @@ class EventSummary
     }
 
     /**
-     * @return list<array{id: int, name: string, votes: int}>
+     * @return list<array{id: int, name: string, wants: int, avoids: int, score: int}>
      */
     private static function nationalityTally(Event $event): array
     {
@@ -38,25 +40,28 @@ class EventSummary
             ->join('nationalities', 'nationalities.id', '=', 'event_vote_nationality.nationality_id')
             ->where('event_votes.event_id', $event->id)
             ->groupBy('nationalities.id', 'nationalities.name')
-            ->orderByDesc('votes')
-            ->orderBy('nationalities.name')
             ->get([
                 'nationalities.id as id',
                 'nationalities.name as name',
-                DB::raw('count(*) as votes'),
+                DB::raw(static::wantsExpr('event_vote_nationality').' as wants'),
+                DB::raw(static::avoidsExpr('event_vote_nationality').' as avoids'),
             ])
             ->map(fn ($row) => [
                 'id' => (int) $row->id,
                 'name' => $row->name,
-                'votes' => (int) $row->votes,
+                'wants' => (int) $row->wants,
+                'avoids' => (int) $row->avoids,
+                'score' => (int) $row->wants - (int) $row->avoids,
             ])
+            ->sort(static::byScore(fn ($n) => $n['name']))
+            ->values()
             ->all();
     }
 
     /**
-     * Tally per attribute type, each ordered by votes desc.
+     * Tally per attribute type, each ranked by net score (wants − avoids).
      *
-     * @return array<string, list<array{value: string, label: string, votes: int}>>
+     * @return array<string, list<array{value: string, label: string, wants: int, avoids: int, score: int}>>
      */
     private static function criteriaTally(Event $event): array
     {
@@ -64,11 +69,11 @@ class EventSummary
             ->join('event_votes', 'event_votes.id', '=', 'event_vote_attribute.event_vote_id')
             ->where('event_votes.event_id', $event->id)
             ->groupBy('event_vote_attribute.type', 'event_vote_attribute.value')
-            ->orderByDesc('votes')
             ->get([
                 'event_vote_attribute.type as type',
                 'event_vote_attribute.value as value',
-                DB::raw('count(*) as votes'),
+                DB::raw(static::wantsExpr('event_vote_attribute').' as wants'),
+                DB::raw(static::avoidsExpr('event_vote_attribute').' as avoids'),
             ]);
 
         $summary = [];
@@ -79,13 +84,38 @@ class EventSummary
                 ->map(fn ($row) => [
                     'value' => $row->value,
                     'label' => static::labelFor($type, $row->value),
-                    'votes' => (int) $row->votes,
+                    'wants' => (int) $row->wants,
+                    'avoids' => (int) $row->avoids,
+                    'score' => (int) $row->wants - (int) $row->avoids,
                 ])
+                ->sort(static::byScore(fn ($item) => static::labelFor($type, $item['value'])))
                 ->values()
                 ->all();
         }
 
         return $summary;
+    }
+
+    private static function wantsExpr(string $table): string
+    {
+        return "sum(case when {$table}.preference = 'want' then 1 else 0 end)";
+    }
+
+    private static function avoidsExpr(string $table): string
+    {
+        return "sum(case when {$table}.preference = 'avoid' then 1 else 0 end)";
+    }
+
+    /**
+     * Rank by score desc, then most wants, then a stable tiebreak label asc.
+     *
+     * @param  callable(array<string, mixed>): string  $label
+     * @return callable(array<string, mixed>, array<string, mixed>): int
+     */
+    private static function byScore(callable $label): callable
+    {
+        return fn (array $a, array $b): int => [$b['score'], $b['wants']] <=> [$a['score'], $a['wants']]
+            ?: strcmp($label($a), $label($b));
     }
 
     private static function labelFor(AttributeType $type, string $value): string
