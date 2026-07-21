@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\NationalityController;
 use App\Http\Controllers\Admin\NationalityGroupController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventRevealController;
 use App\Http\Controllers\EventVoteController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -46,6 +47,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/events/{event}/vote', [EventVoteController::class, 'edit'])->name('events.vote.edit');
     Route::post('/events/{event}/vote', [EventVoteController::class, 'store'])->name('events.vote.store');
     Route::post('/events/{event}/validate', [EventController::class, 'validate'])->name('events.validate');
+
+    // Reveal: swipe the ranked restaurant shortlist to land on one for everyone.
+    Route::get('/events/{event}/reveal', [EventRevealController::class, 'show'])->name('events.reveal');
+    Route::post('/events/{event}/reveal/swipe', [EventRevealController::class, 'swipe'])->name('events.reveal.swipe');
 });
 
 // Admin-only management of the nationality catalogue (JSON, no front-end yet).

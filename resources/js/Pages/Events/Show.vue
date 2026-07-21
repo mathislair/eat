@@ -19,6 +19,10 @@ const props = defineProps({
         type: Object,
         default: null,
     },
+    reveal: {
+        type: Object,
+        default: null,
+    },
 });
 
 const validate = () => {
@@ -230,6 +234,34 @@ const leave = () => {
                             </span>
                         </div>
                         <p v-else class="mt-2 text-sm font-semibold text-ink-muted dark:text-gray-400">—</p>
+                    </div>
+                </div>
+
+                <!-- Reveal: swipe to pick the place -->
+                <div v-if="reveal" class="card bg-grape-100 dark:bg-ink-800">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <h3 class="font-display text-lg font-bold text-ink dark:text-cream">
+                                Pick the place 🍽️
+                            </h3>
+                            <p v-if="reveal.match" class="mt-1 text-sm font-semibold text-ink-muted dark:text-gray-300">
+                                It's a match — everyone's in on
+                                <span class="font-bold text-ink dark:text-cream">{{ reveal.match.name }}</span
+                                ><span v-if="reveal.match.cuisine"> ({{ reveal.match.cuisine }})</span>. 🎉
+                            </p>
+                            <p v-else-if="reveal.count" class="mt-1 text-sm font-semibold text-ink-muted dark:text-gray-300">
+                                {{ reveal.count }} {{ reveal.count === 1 ? 'spot' : 'spots' }} match your group —
+                                swipe to agree on one.
+                            </p>
+                            <p v-else class="mt-1 text-sm font-semibold text-ink-muted dark:text-gray-300">
+                                No matching restaurants in the catalogue yet.
+                            </p>
+                        </div>
+                        <Link v-if="reveal.count" :href="route('events.reveal', event.id)">
+                            <PrimaryButton>
+                                {{ reveal.match ? 'See the match' : 'Start swiping' }}
+                            </PrimaryButton>
+                        </Link>
                     </div>
                 </div>
 

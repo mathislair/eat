@@ -93,4 +93,26 @@ class Event extends Model
     {
         return $this->hasMany(EventVote::class);
     }
+
+    /**
+     * The ranked restaurant shortlist computed once voting closes.
+     *
+     * @return BelongsToMany<Restaurant, $this>
+     */
+    public function restaurants(): BelongsToMany
+    {
+        return $this->belongsToMany(Restaurant::class)
+            ->withPivot('match_score', 'position')
+            ->orderBy('event_restaurant.position');
+    }
+
+    /**
+     * Attendees' accept/reject swipes on the shortlist.
+     *
+     * @return HasMany<RestaurantSwipe, $this>
+     */
+    public function swipes(): HasMany
+    {
+        return $this->hasMany(RestaurantSwipe::class);
+    }
 }
