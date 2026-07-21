@@ -146,7 +146,7 @@ const submit = () => form.post(route('events.vote.store', props.event.id));
         </template>
 
         <div class="py-12">
-            <div class="mx-auto max-w-2xl space-y-5 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-2xl space-y-5 px-4 sm:px-6">
                 <!-- Progress + legend -->
                 <div class="card">
                     <div class="flex items-center justify-between gap-3">

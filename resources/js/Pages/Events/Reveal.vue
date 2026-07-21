@@ -119,7 +119,7 @@ const refresh = () => router.reload({ only: ['restaurants', 'match', 'leader', '
         </template>
 
         <div class="py-12">
-            <div class="mx-auto max-w-xl space-y-5 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-xl space-y-5 px-4 sm:px-6">
                 <!-- Empty catalogue -->
                 <div v-if="!total" class="card text-center">
                     <p class="text-5xl">🍽️</p>

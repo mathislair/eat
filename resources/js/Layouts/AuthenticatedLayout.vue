@@ -1,5 +1,6 @@
 <script setup>
 import BottomNav from '@/Components/BottomNav.vue';
+import InstallPrompt from '@/Components/InstallPrompt.vue';
 </script>
 
 <template>
@@ -19,6 +20,7 @@ import BottomNav from '@/Components/BottomNav.vue';
             <slot />
         </main>
 
+        <InstallPrompt bottom-offset="calc(6rem + env(safe-area-inset-bottom))" />
         <BottomNav />
     </div>
 </template>

@@ -96,8 +96,8 @@ const leave = () => {
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-3xl space-y-6 sm:px-6 lg:px-8">
+        <div class="py-8">
+            <div class="mx-auto max-w-2xl space-y-4 px-4 sm:px-6">
                 <!-- Details -->
                 <div class="card">
                     <div class="flex items-start gap-4">

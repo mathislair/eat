@@ -1,4 +1,5 @@
 <script setup>
+import InstallPrompt from '@/Components/InstallPrompt.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
@@ -99,5 +100,7 @@ const steps = [
         <footer class="pb-10 text-center text-xs font-semibold text-ink-muted dark:text-gray-500">
             🍴 eat — group dining, decided.
         </footer>
+
+        <InstallPrompt bottom-offset="1.25rem" />
     </div>
 </template>
