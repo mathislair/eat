@@ -27,6 +27,38 @@ const form = useForm({
     ),
 });
 
+// ── Steps ────────────────────────────────────────────────────────────────
+// One step for cuisines, one per criteria family, then a review screen.
+const STEP_EMOJI = { price: '💶', diet: '🥗', style: '🌶️' };
+
+const steps = computed(() => [
+    { key: 'cuisines', kind: 'cuisines', emoji: '🌍', label: 'Cuisines' },
+    ...props.criteriaTypes.map((group) => ({
+        key: group.type,
+        kind: 'criteria',
+        group,
+        emoji: STEP_EMOJI[group.type] ?? '🍴',
+        label: group.label,
+    })),
+    { key: 'review', kind: 'review', emoji: '✅', label: 'Review' },
+]);
+
+const stepIndex = ref(0);
+const direction = ref('next');
+const current = computed(() => steps.value[stepIndex.value]);
+const isLast = computed(() => stepIndex.value === steps.value.length - 1);
+const progress = computed(() => ((stepIndex.value + 1) / steps.value.length) * 100);
+
+const goTo = (i) => {
+    if (i < 0 || i >= steps.value.length || i === stepIndex.value) return;
+    direction.value = i > stepIndex.value ? 'next' : 'prev';
+    stepIndex.value = i;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+const next = () => goTo(stepIndex.value + 1);
+const back = () => goTo(stepIndex.value - 1);
+
+// ── Preference bindings ────────────────────────────────────────────────────
 const filteredNationalities = computed(() => {
     const q = search.value.trim().toLowerCase();
     return q
@@ -41,9 +73,9 @@ const setNat = (id, value) => {
 };
 
 const critState = (type, value) => form.criteria[type]?.[value] ?? 'neutral';
-const setCrit = (type, value, next) => {
-    if (next === 'neutral') delete form.criteria[type][value];
-    else form.criteria[type][value] = next;
+const setCrit = (type, value, nextValue) => {
+    if (nextValue === 'neutral') delete form.criteria[type][value];
+    else form.criteria[type][value] = nextValue;
 };
 
 const countPref = (pref) => {
@@ -55,7 +87,27 @@ const countPref = (pref) => {
 };
 const wantCount = computed(() => countPref('want'));
 const avoidCount = computed(() => countPref('avoid'));
-const hasPicks = computed(() => wantCount.value + avoidCount.value > 0);
+
+// ── Review recap ──────────────────────────────────────────────────────────
+const natName = (id) => props.nationalities.find((n) => String(n.id) === String(id))?.name ?? id;
+const critLabel = (type, value) => {
+    const group = props.criteriaTypes.find((g) => g.type === type);
+    return group?.options.find((o) => o.value === value)?.label ?? value;
+};
+
+const picks = computed(() => {
+    const wants = [];
+    const avoids = [];
+    for (const [id, pref] of Object.entries(form.nationalities)) {
+        (pref === 'want' ? wants : avoids).push(natName(id));
+    }
+    for (const group of props.criteriaTypes) {
+        for (const [value, pref] of Object.entries(form.criteria[group.type] ?? {})) {
+            (pref === 'want' ? wants : avoids).push(critLabel(group.type, value));
+        }
+    }
+    return { wants, avoids };
+});
 
 const submit = () => form.post(route('events.vote.store', props.event.id));
 </script>
@@ -79,112 +131,165 @@ const submit = () => form.post(route('events.vote.store', props.event.id));
         </template>
 
         <div class="py-12">
-            <form @submit.prevent="submit" class="mx-auto max-w-3xl space-y-6 sm:px-6 lg:px-8">
-                <!-- How it works -->
-                <div class="card bg-punch-50 dark:bg-ink-800">
-                    <h3 class="font-display text-lg font-bold text-ink dark:text-cream">
-                        Set your cravings 🍽️
-                    </h3>
-                    <p class="mt-1 text-sm font-semibold text-ink-muted dark:text-gray-300">
-                        Tap each option to say how you feel. Tap again to change your
-                        mind. When the host closes voting, the most-wanted option wins
-                        — but a single 🔴 vetoes it for the whole group, so use it
-                        wisely.
-                    </p>
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        <span class="pref-legend">
-                            <span class="pref-legend__dot pref-legend__dot--want">✓</span>
-                            I want
-                        </span>
-                        <span class="pref-legend">
-                            <span class="pref-legend__dot pref-legend__dot--avoid">✕</span>
-                            Surely not
-                        </span>
-                        <span class="pref-legend">
-                            <span class="pref-legend__dot">–</span>
-                            Neutral
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Nationalities -->
+            <div class="mx-auto max-w-2xl space-y-5 sm:px-6 lg:px-8">
+                <!-- Progress + legend -->
                 <div class="card">
                     <div class="flex items-center justify-between gap-3">
-                        <h3 class="font-display text-lg font-bold text-ink dark:text-cream">
-                            Cuisines
-                        </h3>
+                        <p class="font-display text-sm font-bold text-ink-muted dark:text-gray-300">
+                            Step {{ stepIndex + 1 }} of {{ steps.length }}
+                        </p>
                         <div class="flex items-center gap-2">
                             <span v-if="wantCount" class="badge badge-mint">🟢 {{ wantCount }}</span>
                             <span v-if="avoidCount" class="badge badge-berry">🔴 {{ avoidCount }}</span>
                         </div>
                     </div>
-                    <TextInput
-                        v-model="search"
-                        type="search"
-                        class="mt-3 block w-full"
-                        placeholder="Search cuisines…"
-                    />
-                    <div class="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4">
-                        <PreferenceTile
-                            v-for="n in filteredNationalities"
-                            :key="n.id"
-                            :label="n.name"
-                            :model-value="natState(n.id)"
-                            @update:model-value="(v) => setNat(n.id, v)"
+
+                    <!-- Progress bar -->
+                    <div class="mt-2 h-3.5 overflow-hidden rounded-full border-3 border-ink bg-cream-200 dark:bg-ink-700">
+                        <div
+                            class="h-full rounded-full bg-mint-400 transition-all duration-300 ease-out"
+                            :style="{ width: `${progress}%` }"
                         />
                     </div>
-                    <p
-                        v-if="!filteredNationalities.length"
-                        class="mt-4 text-sm font-semibold text-ink-muted dark:text-gray-400"
-                    >
-                        No cuisine matches “{{ search }}”.
-                    </p>
-                </div>
 
-                <!-- Criteria -->
-                <div v-for="group in criteriaTypes" :key="group.type" class="card">
-                    <h3 class="font-display text-lg font-bold text-ink dark:text-cream">
-                        {{ group.label }}
-                    </h3>
-                    <div class="mt-3 grid grid-cols-3 gap-2.5 sm:grid-cols-4">
-                        <PreferenceTile
-                            v-for="option in group.options"
-                            :key="option.value"
-                            :label="option.label"
-                            :model-value="critState(group.type, option.value)"
-                            @update:model-value="(v) => setCrit(group.type, option.value, v)"
-                        />
+                    <!-- Step dots -->
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <button
+                            v-for="(s, i) in steps"
+                            :key="s.key"
+                            type="button"
+                            class="wizard-dot"
+                            :class="{
+                                'wizard-dot--active': i === stepIndex,
+                                'wizard-dot--done': i < stepIndex,
+                            }"
+                            :title="s.label"
+                            :aria-label="`Go to ${s.label}`"
+                            @click="goTo(i)"
+                        >
+                            <span aria-hidden="true">{{ s.emoji }}</span>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Action bar -->
-                <div class="sticky bottom-4 z-10">
-                    <div
-                        class="panel flex flex-col items-center justify-between gap-3 bg-cream-50/95 backdrop-blur dark:bg-ink-800/95 sm:flex-row"
-                    >
-                        <p class="text-sm font-bold text-ink-muted dark:text-gray-300">
-                            <template v-if="hasPicks">
-                                {{ wantCount }} craving{{ wantCount === 1 ? '' : 's' }} ·
-                                {{ avoidCount }} no-go{{ avoidCount === 1 ? '' : 's' }}
-                            </template>
-                            <template v-else>
-                                No picks yet — neutral means “I'm easy”.
-                            </template>
-                        </p>
-                        <div class="flex items-center gap-4">
-                            <Link
-                                :href="route('events.show', event.id)"
-                                class="font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
-                            >
-                                Cancel
-                            </Link>
-                            <PrimaryButton :disabled="form.processing">
-                                Submit my vote
-                            </PrimaryButton>
+                <!-- Step card -->
+                <div class="card overflow-hidden">
+                    <Transition :name="direction === 'next' ? 'step-next' : 'step-prev'" mode="out-in">
+                        <div :key="current.key">
+                            <!-- Heading -->
+                            <div class="flex items-center gap-3">
+                                <span class="text-4xl">{{ current.emoji }}</span>
+                                <div>
+                                    <h3 class="font-display text-xl font-bold text-ink dark:text-cream">
+                                        {{ current.kind === 'review' ? 'Review your ballot' : current.label }}
+                                    </h3>
+                                    <p class="text-sm font-semibold text-ink-muted dark:text-gray-300">
+                                        <template v-if="current.kind === 'cuisines'">
+                                            Tap to cycle 🟢 want → 🔴 veto. A single 🔴 rules a cuisine out for everyone.
+                                        </template>
+                                        <template v-else-if="current.kind === 'criteria'">
+                                            How do you feel about each {{ current.label.toLowerCase() }} option?
+                                        </template>
+                                        <template v-else>
+                                            Happy with it? Submit when you're ready.
+                                        </template>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Cuisines -->
+                            <div v-if="current.kind === 'cuisines'" class="mt-4">
+                                <TextInput
+                                    v-model="search"
+                                    type="search"
+                                    class="block w-full"
+                                    placeholder="Search cuisines…"
+                                />
+                                <div class="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                                    <PreferenceTile
+                                        v-for="n in filteredNationalities"
+                                        :key="n.id"
+                                        :label="n.name"
+                                        :model-value="natState(n.id)"
+                                        @update:model-value="(v) => setNat(n.id, v)"
+                                    />
+                                </div>
+                                <p
+                                    v-if="!filteredNationalities.length"
+                                    class="mt-4 text-sm font-semibold text-ink-muted dark:text-gray-400"
+                                >
+                                    No cuisine matches “{{ search }}”.
+                                </p>
+                            </div>
+
+                            <!-- Criteria -->
+                            <div v-else-if="current.kind === 'criteria'" class="mt-4">
+                                <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                                    <PreferenceTile
+                                        v-for="option in current.group.options"
+                                        :key="option.value"
+                                        :label="option.label"
+                                        :model-value="critState(current.group.type, option.value)"
+                                        @update:model-value="(v) => setCrit(current.group.type, option.value, v)"
+                                    />
+                                </div>
+                            </div>
+
+                            <!-- Review -->
+                            <div v-else class="mt-5 space-y-4">
+                                <div class="rounded-xl2 border-3 border-ink bg-mint-100 p-4 dark:bg-ink-700">
+                                    <p class="font-display text-sm font-bold text-mint-600">
+                                        🟢 You want ({{ picks.wants.length }})
+                                    </p>
+                                    <div v-if="picks.wants.length" class="mt-2 flex flex-wrap gap-2">
+                                        <span v-for="(label, i) in picks.wants" :key="`w${i}`" class="badge badge-mint">
+                                            {{ label }}
+                                        </span>
+                                    </div>
+                                    <p v-else class="mt-1 text-sm font-semibold text-ink-muted dark:text-gray-300">
+                                        Nothing yet — you're easy to please!
+                                    </p>
+                                </div>
+
+                                <div class="rounded-xl2 border-3 border-ink bg-berry-100 p-4 dark:bg-ink-700">
+                                    <p class="font-display text-sm font-bold text-berry-600">
+                                        🔴 You veto ({{ picks.avoids.length }})
+                                    </p>
+                                    <div v-if="picks.avoids.length" class="mt-2 flex flex-wrap gap-2">
+                                        <span v-for="(label, i) in picks.avoids" :key="`a${i}`" class="badge badge-berry">
+                                            {{ label }}
+                                        </span>
+                                    </div>
+                                    <p v-else class="mt-1 text-sm font-semibold text-ink-muted dark:text-gray-300">
+                                        No vetoes — anything goes.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
+                    </Transition>
+
+                    <!-- Nav -->
+                    <div class="mt-6 flex items-center justify-between gap-3 border-t-3 border-dashed border-ink/15 pt-4 dark:border-cream/15">
+                        <Link
+                            v-if="stepIndex === 0"
+                            :href="route('events.show', event.id)"
+                            class="font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
+                        >
+                            Cancel
+                        </Link>
+                        <button v-else type="button" class="btn btn-ghost" @click="back">
+                            ← Back
+                        </button>
+
+                        <button v-if="!isLast" type="button" class="btn btn-primary" @click="next">
+                            Continue →
+                        </button>
+                        <PrimaryButton v-else :disabled="form.processing" @click="submit">
+                            Submit my vote 🎉
+                        </PrimaryButton>
                     </div>
                 </div>
-            </form>
+            </div>
         </div>
     </AuthenticatedLayout>
 </template>

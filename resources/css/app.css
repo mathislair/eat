@@ -253,24 +253,28 @@
         @apply block w-full break-words;
     }
 
-    /* Compact key explaining the three tile states. */
-    .pref-legend {
-        @apply inline-flex items-center gap-1.5 rounded-full border-3 px-3 py-1 font-display text-xs font-bold;
+    /* Step-by-step wizard progress dots. */
+    .wizard-dot {
+        @apply flex h-9 w-9 flex-none cursor-pointer select-none items-center justify-center rounded-xl2 border-3 text-base leading-none transition-transform duration-100 ease-out;
         border-color: var(--ds-line);
         background-color: var(--ds-surface);
-        color: var(--ds-text);
+        box-shadow: 2px 2px 0 0 var(--ds-shadow);
     }
-    .pref-legend__dot {
-        @apply flex h-5 w-5 items-center justify-center rounded-full border-3 text-[0.7rem] leading-none;
-        border-color: var(--ds-line);
-        background-color: var(--ds-surface);
-        color: var(--ds-muted);
+    .wizard-dot:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 3px 3px 0 0 var(--ds-shadow);
     }
-    .pref-legend__dot--want {
-        @apply bg-mint-300 text-ink;
+    .wizard-dot:focus-visible {
+        outline: none;
+        box-shadow: 2px 2px 0 0 var(--ds-shadow), 0 0 0 3px var(--ds-focus);
     }
-    .pref-legend__dot--avoid {
-        @apply bg-berry-400 text-white;
+    .wizard-dot--done {
+        @apply bg-mint-300;
+    }
+    .wizard-dot--active {
+        @apply bg-sunny-300;
+        transform: translate(-1px, -1px);
+        box-shadow: 3px 3px 0 0 var(--ds-shadow);
     }
 }
 
@@ -287,5 +291,31 @@
 }
 .pref-pop-leave-to {
     transform: scale(0.4);
+    opacity: 0;
+}
+
+/* Step-by-step wizard: slides one way going forward, the other going back. */
+.step-next-enter-active,
+.step-next-leave-active,
+.step-prev-enter-active,
+.step-prev-leave-active {
+    transition:
+        transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.3s ease;
+}
+.step-next-enter-from {
+    transform: translateX(45px);
+    opacity: 0;
+}
+.step-next-leave-to {
+    transform: translateX(-45px);
+    opacity: 0;
+}
+.step-prev-enter-from {
+    transform: translateX(-45px);
+    opacity: 0;
+}
+.step-prev-leave-to {
+    transform: translateX(45px);
     opacity: 0;
 }
