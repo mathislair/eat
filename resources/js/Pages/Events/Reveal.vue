@@ -110,7 +110,7 @@ const refresh = () => router.reload({ only: ['restaurants', 'match', 'leader', '
                     Pick a place — {{ event.name }}
                 </h2>
                 <Link
-                    :href="route('events.show', event.id)"
+                    :href="route('events.hub', event.id)"
                     class="font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
                 >
                     Back to event
@@ -309,7 +309,7 @@ const refresh = () => router.reload({ only: ['restaurants', 'match', 'leader', '
                     </div>
 
                     <div class="flex justify-center">
-                        <Link :href="route('events.show', event.id)">
+                        <Link :href="route('events.hub', event.id)">
                             <PrimaryButton>Back to event</PrimaryButton>
                         </Link>
                     </div>

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\EventStatus;
 use App\Enums\Meal;
 use App\Models\Event;
 use App\Models\User;
@@ -59,7 +60,7 @@ class EventTest extends TestCase
         $this->assertSame(Meal::Dinner, $event->meal);
         $this->assertNotEmpty($event->invite_code);
         $this->assertTrue($event->attendees->contains($user), 'creator should auto-join');
-        $response->assertRedirect(route('events.show', $event));
+        $response->assertRedirect(route('events.hub', $event));
     }
 
     public function test_creating_an_event_requires_valid_fields(): void
@@ -73,14 +74,38 @@ class EventTest extends TestCase
         ])->assertSessionHasErrors(['name', 'date', 'meal']);
     }
 
-    public function test_an_attendee_can_view_an_event(): void
+    public function test_an_attendee_can_open_the_event_hub(): void
+    {
+        $user = User::factory()->create();
+        $event = Event::factory()->create(['creator_id' => $user->id]);
+        $event->attendees()->attach($user);
+
+        $this->actingAs($user)->get("/events/{$event->id}/hub")
+            ->assertInertia(fn (Assert $page) => $page->component('Events/Show'));
+    }
+
+    public function test_opening_a_voting_event_jumps_to_the_vote(): void
     {
         $user = User::factory()->create();
         $event = Event::factory()->create(['creator_id' => $user->id]);
         $event->attendees()->attach($user);
 
         $this->actingAs($user)->get("/events/{$event->id}")
-            ->assertInertia(fn (Assert $page) => $page->component('Events/Show'));
+            ->assertRedirect(route('events.vote.edit', $event));
+    }
+
+    public function test_opening_a_closed_event_jumps_to_the_reveal(): void
+    {
+        $user = User::factory()->create();
+        $event = Event::factory()->create([
+            'creator_id' => $user->id,
+            'status' => EventStatus::Closed,
+            'validated_at' => now(),
+        ]);
+        $event->attendees()->attach($user);
+
+        $this->actingAs($user)->get("/events/{$event->id}")
+            ->assertRedirect(route('events.reveal', $event));
     }
 
     public function test_a_non_attendee_cannot_view_an_event(): void

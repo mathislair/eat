@@ -39,7 +39,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::get('/events/join/{code?}', [EventController::class, 'joinForm'])->name('events.join');
     Route::post('/events/join', [EventController::class, 'join'])->name('events.join.store');
+    // Opening an event drops you straight into its current phase (vote / reveal);
+    // the hub holds the details, invite code, and host controls.
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
+    Route::get('/events/{event}/hub', [EventController::class, 'hub'])->name('events.hub');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
     Route::delete('/events/{event}/leave', [EventController::class, 'leave'])->name('events.leave');
 

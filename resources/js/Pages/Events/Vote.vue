@@ -137,7 +137,7 @@ const submit = () => form.post(route('events.vote.store', props.event.id));
                     Vote — {{ event.name }}
                 </h2>
                 <Link
-                    :href="route('events.show', event.id)"
+                    :href="route('events.hub', event.id)"
                     class="font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
                 >
                     Back to event
@@ -324,7 +324,7 @@ const submit = () => form.post(route('events.vote.store', props.event.id));
                     <div class="mt-6 flex items-center justify-between gap-3 border-t-3 border-dashed border-ink/15 pt-4 dark:border-cream/15">
                         <Link
                             v-if="stepIndex === 0"
-                            :href="route('events.show', event.id)"
+                            :href="route('events.hub', event.id)"
                             class="font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
                         >
                             Cancel
