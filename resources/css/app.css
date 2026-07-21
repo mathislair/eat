@@ -341,6 +341,32 @@
     .swipe-btn--no {
         @apply bg-berry-400 text-white;
     }
+    .swipe-card__header {
+        @apply flex flex-none items-center justify-center border-b-3;
+        border-color: var(--ds-line);
+        height: 9rem;
+    }
+    .swipe-card__emoji {
+        @apply text-7xl drop-shadow;
+    }
+}
+
+/* Falling confetti for the match reveal. */
+@keyframes confetti-fall {
+    0% {
+        transform: translateY(-40px) rotate(0deg);
+        opacity: 0;
+    }
+    12% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(190px) rotate(320deg);
+        opacity: 0;
+    }
+}
+.confetti-piece {
+    animation: confetti-fall 1.6s ease-in infinite;
 }
 
 /* Icon swap animation for a tactile, immersive toggle. */

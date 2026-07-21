@@ -48,6 +48,7 @@ class EventRevealController extends Controller
                 ])
                 ->values(),
             'position' => $restaurant->pivot->position,
+            'match_score' => $restaurant->pivot->match_score,
             'accepts' => $result['tallies'][$restaurant->id]['accepts'] ?? 0,
             'rejects' => $result['tallies'][$restaurant->id]['rejects'] ?? 0,
             'mine' => $mySwipes[$restaurant->id] ?? null,
