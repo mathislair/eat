@@ -30,15 +30,15 @@ const submit = () =>
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+            <h2 class="text-xl font-bold leading-tight text-ink dark:text-cream">
                 Join an event
             </h2>
         </template>
 
         <div class="py-12">
             <div class="mx-auto max-w-md sm:px-6 lg:px-8">
-                <div class="bg-white p-6 shadow-sm sm:rounded-lg dark:bg-gray-800">
-                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                <div class="card">
+                    <p class="text-sm font-semibold text-ink-muted dark:text-gray-400">
                         Enter the invite code the host shared with you.
                     </p>
                     <form @submit.prevent="submit" class="mt-6 space-y-6">
@@ -58,7 +58,7 @@ const submit = () =>
                         <div class="flex items-center justify-end gap-4">
                             <Link
                                 :href="route('events.index')"
-                                class="text-sm text-gray-600 underline dark:text-gray-400"
+                                class="font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
                             >
                                 Cancel
                             </Link>

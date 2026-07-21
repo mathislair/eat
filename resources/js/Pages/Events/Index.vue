@@ -31,7 +31,7 @@ const formatDate = (iso) =>
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                <h2 class="text-xl font-bold leading-tight text-ink dark:text-cream">
                     Events
                 </h2>
                 <div class="flex gap-2">
@@ -49,43 +49,41 @@ const formatDate = (iso) =>
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <div
                     v-if="events.length === 0"
-                    class="rounded-lg bg-white p-10 text-center shadow-sm dark:bg-gray-800"
+                    class="card text-center"
                 >
-                    <p class="text-gray-600 dark:text-gray-300">
+                    <p class="text-4xl">🍽️</p>
+                    <p class="mt-3 font-display text-lg font-semibold text-ink dark:text-cream">
                         You have no events yet.
                     </p>
-                    <Link :href="route('events.create')" class="mt-4 inline-block">
+                    <Link :href="route('events.create')" class="mt-5 inline-block">
                         <PrimaryButton>Create your first event</PrimaryButton>
                     </Link>
                 </div>
 
-                <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div v-else class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     <Link
                         v-for="event in events"
                         :key="event.id"
                         :href="route('events.show', event.id)"
-                        class="block rounded-lg bg-white p-6 shadow-sm transition hover:shadow-md dark:bg-gray-800"
+                        class="card card-interactive block"
                     >
-                        <div class="flex items-start justify-between">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        <div class="flex items-start justify-between gap-2">
+                            <h3 class="font-display text-lg font-bold text-ink dark:text-cream">
                                 {{ event.name }}
                             </h3>
-                            <span class="text-2xl" :title="event.meal_label">
+                            <span class="text-3xl" :title="event.meal_label">
                                 {{ mealEmoji[event.meal] }}
                             </span>
                         </div>
-                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                        <p class="mt-2 text-sm font-semibold text-ink-muted dark:text-gray-400">
                             {{ formatDate(event.date) }} · {{ event.meal_label }}
                         </p>
                         <div class="mt-4 flex items-center justify-between text-sm">
-                            <span class="text-gray-500 dark:text-gray-400">
+                            <span class="font-semibold text-ink-muted dark:text-gray-400">
                                 {{ event.attendees_count }}
                                 {{ event.attendees_count === 1 ? 'guest' : 'guests' }}
                             </span>
-                            <span
-                                v-if="event.is_creator"
-                                class="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200"
-                            >
+                            <span v-if="event.is_creator" class="badge badge-host">
                                 Host
                             </span>
                         </div>
