@@ -277,6 +277,41 @@
         box-shadow: 3px 3px 0 0 var(--ds-shadow);
     }
 
+    /* ── Segmented tabs (in-page section switcher) ───────────────────────
+     * A chunky pill switcher for slicing one dense screen into a couple of
+     * focused views. One outlined track; the active tab is a filled sticker
+     * that lifts off it. Keeps long pages (e.g. the event hub) scannable.
+     */
+    .tabs {
+        @apply flex gap-1.5 rounded-blob border-3 p-1.5;
+        border-color: var(--ds-line);
+        background-color: var(--ds-surface);
+        box-shadow: 3px 3px 0 0 var(--ds-shadow);
+    }
+    .tab {
+        @apply flex flex-1 cursor-pointer select-none items-center justify-center gap-1.5 rounded-xl2 px-3 py-2 font-display text-sm font-bold transition-transform duration-100 ease-out;
+        color: var(--ds-muted);
+    }
+    .tab:hover {
+        color: var(--ds-text);
+    }
+    .tab:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px var(--ds-focus);
+    }
+    .tab--active {
+        @apply bg-punch-500 text-white;
+        box-shadow: 2px 2px 0 0 var(--ds-shadow);
+    }
+    .tab--active:hover {
+        @apply text-white;
+    }
+    /* Small count pill (e.g. guest total) riding along in the tab label. */
+    .tab__count {
+        @apply inline-flex min-w-[1.375rem] items-center justify-center rounded-full border-2 px-1 py-0 text-xs font-bold leading-5;
+        border-color: currentColor;
+    }
+
     /* ── Bottom tab bar (mobile-first app navigation) ───────────────────── */
     .bottom-nav {
         @apply fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-md items-stretch justify-around gap-1 rounded-t-blob border-3 border-b-0 px-2 pt-2;
