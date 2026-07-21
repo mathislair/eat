@@ -7,6 +7,7 @@ use App\Http\Requests\StoreEventVoteRequest;
 use App\Models\Event;
 use App\Models\EventVote;
 use App\Models\Nationality;
+use App\Support\UserTaste;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,19 +24,29 @@ class EventVoteController extends Controller
     {
         Gate::authorize('vote', $event);
 
+        $user = $request->user();
+
         $ballot = $event->votes()
             ->with(['nationalities:id', 'criteria'])
-            ->firstWhere('user_id', $request->user()->id);
+            ->firstWhere('user_id', $user->id);
+
+        // No ballot yet? Seed the form from the voter's standing food
+        // preferences so a first-timer starts from their own tastes, not a
+        // blank slate. Once they've submitted anything, their ballot wins.
+        $prefilled = $ballot === null && UserTaste::isNotEmpty($user);
+
+        $nationalities = $ballot
+            ? $ballot->nationalities->mapWithKeys(fn ($n) => [$n->id => $n->pivot->preference])->all()
+            : ($prefilled ? UserTaste::nationalities($user) : []);
 
         return Inertia::render('Events/Vote', [
             'event' => ['id' => $event->id, 'name' => $event->name],
             'nationalities' => Nationality::orderBy('name')->get(['id', 'name']),
-            'criteriaTypes' => $this->criteriaTypes(),
+            'criteriaTypes' => AttributeType::catalogue(),
+            'prefilled' => $prefilled,
             'ballot' => [
-                'nationalities' => $ballot?->nationalities
-                    ->mapWithKeys(fn ($n) => [$n->id => $n->pivot->preference])
-                    ->all() ?? (object) [],
-                'criteria' => $this->groupCriteria($ballot),
+                'nationalities' => $nationalities ?: (object) [],
+                'criteria' => $prefilled ? UserTaste::criteria($user) : $this->groupCriteria($ballot),
             ],
         ]);
     }
@@ -74,21 +85,6 @@ class EventVoteController extends Controller
 
         // Back to the hub so they can see status and the host can close voting.
         return redirect()->route('events.hub', $event);
-    }
-
-    /**
-     * @return list<array{type: string, label: string, options: list<array{value: string, label: string}>}>
-     */
-    private function criteriaTypes(): array
-    {
-        return array_map(fn (AttributeType $type) => [
-            'type' => $type->value,
-            'label' => $type->label(),
-            'options' => array_map(
-                fn ($option) => ['value' => $option->value, 'label' => $option->label()],
-                $type->options(),
-            ),
-        ], AttributeType::cases());
     }
 
     /**

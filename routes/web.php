@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\NationalityGroupController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventRevealController;
 use App\Http\Controllers\EventVoteController;
+use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -22,6 +23,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Personal food preferences: a standing taste profile that pre-fills votes
+    // and stands in for a member who doesn't cast a ballot.
+    Route::get('/preferences', [PreferenceController::class, 'edit'])->name('preferences.edit');
+    Route::put('/preferences', [PreferenceController::class, 'update'])->name('preferences.update');
 
     // Events — specific paths before the {event} wildcard so they aren't captured by it.
     Route::get('/events', [EventController::class, 'index'])->name('events.index');

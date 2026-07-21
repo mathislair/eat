@@ -11,9 +11,14 @@ const props = defineProps({
     nationalities: { type: Array, default: () => [] },
     criteriaTypes: { type: Array, default: () => [] },
     ballot: { type: Object, required: true },
+    // True when this ballot was seeded from the voter's saved preferences.
+    prefilled: { type: Boolean, default: false },
 });
 
 const search = ref('');
+
+// A one-off nudge, shown until the voter starts tweaking the seeded ballot.
+const showPrefillHint = ref(props.prefilled);
 
 // The ballot IS the wire format: a map of option → preference, with neutral
 // simply left out. Nothing to transform on submit.
@@ -180,6 +185,30 @@ const submit = () => form.post(route('events.vote.store', props.event.id));
         </template>
 
         <div class="space-y-4">
+                <!-- Pre-filled from the voter's saved preferences. -->
+                <div
+                    v-if="showPrefillHint"
+                    class="card flex items-start gap-3 border-grape-300 bg-grape-100 dark:bg-grape-700/30"
+                >
+                    <span class="text-2xl">🌟</span>
+                    <div class="flex-1">
+                        <p class="font-display text-sm font-bold text-ink dark:text-cream">
+                            Pre-filled from your preferences
+                        </p>
+                        <p class="mt-0.5 text-sm font-semibold text-ink-muted dark:text-gray-300">
+                            We started your ballot from your saved tastes —
+                            tweak anything before you submit.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        class="font-display text-xs font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
+                        @click="showPrefillHint = false"
+                    >
+                        Got it
+                    </button>
+                </div>
+
                 <!-- Step card -->
                 <div class="card overflow-hidden">
                     <Transition :name="direction === 'next' ? 'step-next' : 'step-prev'" mode="out-in">

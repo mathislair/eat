@@ -28,7 +28,7 @@ const tabs = [
         key: 'profile',
         label: 'Profile',
         href: route('profile.edit'),
-        match: ['profile.edit'],
+        match: ['profile.edit', 'preferences.edit'],
         icon: 'M20 21v-1a5 5 0 0 0-5-5H9a5 5 0 0 0-5 5v1M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z',
     },
 ];

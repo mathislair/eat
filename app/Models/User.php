@@ -60,4 +60,26 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Event::class)->withTimestamps();
     }
+
+    /**
+     * Cuisines this user has a standing taste for, each carrying a 'want' or
+     * 'avoid' preference on the pivot. Their persistent food profile.
+     *
+     * @return BelongsToMany<Nationality, $this>
+     */
+    public function nationalityPreferences(): BelongsToMany
+    {
+        return $this->belongsToMany(Nationality::class, 'user_nationality_preference')
+            ->withPivot('preference');
+    }
+
+    /**
+     * Criteria (price/diet/style values) this user has a standing taste for.
+     *
+     * @return HasMany<UserAttributePreference, $this>
+     */
+    public function attributePreferences(): HasMany
+    {
+        return $this->hasMany(UserAttributePreference::class);
+    }
 }
