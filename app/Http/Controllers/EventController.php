@@ -11,6 +11,7 @@ use App\Models\Restaurant;
 use App\Support\EventSummary;
 use App\Support\RestaurantMatcher;
 use App\Support\SwipeResult;
+use App\Support\UserTaste;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -162,6 +163,11 @@ class EventController extends Controller
             'status' => EventStatus::Closed,
             'validated_at' => now(),
         ]);
+
+        // Attendees who never voted still count through their standing food
+        // preferences, so a taste profile shapes the group's outcome even when
+        // someone forgets to cast a ballot.
+        UserTaste::seedMissingBallots($event);
 
         // Freeze the votes into a ranked restaurant shortlist to swipe through.
         RestaurantMatcher::generate($event);

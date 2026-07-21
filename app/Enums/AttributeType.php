@@ -37,6 +37,25 @@ enum AttributeType: string
     }
 
     /**
+     * The full catalogue — every type with its selectable options, shaped for
+     * the front-end preference pickers (event ballots and personal
+     * preferences alike).
+     *
+     * @return list<array{type: string, label: string, options: list<array{value: string, label: string}>}>
+     */
+    public static function catalogue(): array
+    {
+        return array_map(fn (self $type) => [
+            'type' => $type->value,
+            'label' => $type->label(),
+            'options' => array_map(
+                fn (Attribute $option) => ['value' => $option->value, 'label' => $option->label()],
+                $type->options(),
+            ),
+        ], self::cases());
+    }
+
+    /**
      * The backing values of this type's options — handy for validation
      * (e.g. Rule::in(AttributeType::Price->values())).
      *

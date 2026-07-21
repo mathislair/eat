@@ -41,6 +41,25 @@ const user = usePage().props.auth.user;
                     </Link>
                 </div>
 
+            <!-- Food preferences -->
+            <Link
+                :href="route('preferences.edit')"
+                class="card-interactive flex items-center justify-between gap-3"
+            >
+                <div class="flex items-center gap-3">
+                    <span class="flex h-12 w-12 items-center justify-center rounded-full border-3 border-ink bg-mint-300 text-2xl">
+                        😋
+                    </span>
+                    <div>
+                        <p class="font-display font-bold text-ink dark:text-cream">Food preferences</p>
+                        <p class="text-sm font-semibold text-ink-muted dark:text-gray-400">
+                            Set what you love and never — we'll pre-fill your votes.
+                        </p>
+                    </div>
+                </div>
+                <span class="font-display text-xl font-bold text-ink-muted dark:text-gray-400" aria-hidden="true">→</span>
+            </Link>
+
                 <div class="card">
                     <UpdateProfileInformationForm
                         :must-verify-email="mustVerifyEmail"
