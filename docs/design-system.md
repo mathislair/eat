@@ -66,6 +66,7 @@ re-implementing the look inline:
 | `.label` | Form labels |
 | `.checkbox` | Checkboxes |
 | `.badge` + `.badge-host` / `.badge-mint` / `.badge-grape` / `.badge-sky` | Pills |
+| `.chip` + `.chip-selected` | Toggleable multi-select pills (filters, vote options) |
 
 The shared Vue components (`PrimaryButton`, `SecondaryButton`, `DangerButton`,
 `TextInput`, `InputLabel`, `Checkbox`) already wrap these classes, so most pages
