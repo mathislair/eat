@@ -38,6 +38,7 @@ class EventController extends Controller
                 'date' => $event->date->toDateString(),
                 'meal' => $event->meal->value,
                 'meal_label' => $event->meal->label(),
+                'status' => $event->status->value,
                 'attendees_count' => $event->attendees_count,
                 'is_creator' => $event->creator_id === $user->id,
             ]);
@@ -62,10 +63,29 @@ class EventController extends Controller
         // Creator auto-joins the attendees list.
         $event->attendees()->attach($request->user());
 
-        return redirect()->route('events.show', $event);
+        // Land on the hub so the host can grab the invite code and rally people.
+        return redirect()->route('events.hub', $event);
     }
 
-    public function show(Request $request, Event $event): Response
+    /**
+     * Opening an event jumps straight into its current phase: the vote while
+     * it's open, the restaurant reveal once it's closed. The details/host
+     * controls live on the hub.
+     */
+    public function show(Request $request, Event $event): RedirectResponse
+    {
+        Gate::authorize('view', $event);
+
+        return $event->isClosed()
+            ? redirect()->route('events.reveal', $event)
+            : redirect()->route('events.vote.edit', $event);
+    }
+
+    /**
+     * The event hub: details, invite code, attendees, the vote verdict, and
+     * host controls (validate, delete).
+     */
+    public function hub(Request $request, Event $event): Response
     {
         Gate::authorize('view', $event);
 

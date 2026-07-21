@@ -54,7 +54,7 @@ class EventVoteTest extends TestCase
                 'diet' => ['vegan' => 'avoid'],
                 'style' => ['spicy' => 'want'],
             ],
-        ])->assertRedirect(route('events.show', $event));
+        ])->assertRedirect(route('events.hub', $event));
 
         $ballot = EventVote::firstWhere(['event_id' => $event->id, 'user_id' => $user->id]);
         $this->assertNotNull($ballot);
@@ -199,7 +199,7 @@ class EventVoteTest extends TestCase
         $user = User::factory()->create();
         $event = $this->eventWithAttendee($user);
 
-        $this->actingAs($user)->get("/events/{$event->id}")
+        $this->actingAs($user)->get("/events/{$event->id}/hub")
             ->assertInertia(fn (Assert $page) => $page
                 ->where('event.status', 'voting')
                 ->where('summary', null)
@@ -221,7 +221,7 @@ class EventVoteTest extends TestCase
 
         $event->update(['status' => EventStatus::Closed, 'validated_at' => now()]);
 
-        $this->actingAs($creator)->get("/events/{$event->id}")
+        $this->actingAs($creator)->get("/events/{$event->id}/hub")
             ->assertInertia(fn (Assert $page) => $page
                 ->where('summary.nationalities.0.name', 'Thai')
                 ->where('summary.nationalities.0.wants', 3)
@@ -246,7 +246,7 @@ class EventVoteTest extends TestCase
 
         $event->update(['status' => EventStatus::Closed, 'validated_at' => now()]);
 
-        $this->actingAs($creator)->get("/events/{$event->id}")
+        $this->actingAs($creator)->get("/events/{$event->id}/hub")
             ->assertInertia(fn (Assert $page) => $page
                 ->where('summary.nationalities.0.name', 'Pizza')
                 ->where('summary.nationalities.0.wants', 2)
@@ -270,7 +270,7 @@ class EventVoteTest extends TestCase
 
         $event->update(['status' => EventStatus::Closed, 'validated_at' => now()]);
 
-        $this->actingAs($creator)->get("/events/{$event->id}")
+        $this->actingAs($creator)->get("/events/{$event->id}/hub")
             ->assertInertia(fn (Assert $page) => $page
                 ->where('summary.criteria.price.0.value', '€€')
                 ->where('summary.criteria.price.0.wants', 2)

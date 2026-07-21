@@ -72,7 +72,8 @@ class EventVoteController extends Controller
             }
         });
 
-        return redirect()->route('events.show', $event);
+        // Back to the hub so they can see status and the host can close voting.
+        return redirect()->route('events.hub', $event);
     }
 
     /**

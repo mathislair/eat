@@ -23,6 +23,13 @@ const formatDate = (iso) =>
         month: 'short',
         day: 'numeric',
     });
+
+// Opening an event drops you straight into its phase: swipe once it's closed,
+// otherwise vote.
+const openHref = (event) =>
+    event.status === 'closed'
+        ? route('events.reveal', event.id)
+        : route('events.vote.edit', event.id);
 </script>
 
 <template>
@@ -64,7 +71,7 @@ const formatDate = (iso) =>
                     <Link
                         v-for="event in events"
                         :key="event.id"
-                        :href="route('events.show', event.id)"
+                        :href="openHref(event)"
                         class="card card-interactive block"
                     >
                         <div class="flex items-start justify-between gap-2">
