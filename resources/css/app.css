@@ -277,6 +277,24 @@
         box-shadow: 3px 3px 0 0 var(--ds-shadow);
     }
 
+    /* ── Bottom tab bar (mobile-first app navigation) ───────────────────── */
+    .bottom-nav {
+        @apply fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-md items-stretch justify-around gap-1 rounded-t-blob border-3 border-b-0 px-2 pt-2;
+        border-color: var(--ds-line);
+        background-color: var(--ds-surface);
+        padding-bottom: calc(0.55rem + env(safe-area-inset-bottom));
+    }
+    .bottom-nav__item {
+        @apply flex flex-1 flex-col items-center gap-1 rounded-xl2 py-1.5 font-display text-[0.68rem] font-bold transition-colors;
+        color: var(--ds-muted);
+    }
+    .bottom-nav__item svg {
+        @apply h-6 w-6;
+    }
+    .bottom-nav__item--active {
+        @apply bg-punch-100 text-punch-600 dark:bg-ink-700 dark:text-punch-300;
+    }
+
     /* ── Swipe deck (restaurant reveal) ──────────────────────────────────
      * Tinder-style cards: chunky, outlined, draggable. The top card follows
      * the pointer; releasing past a threshold flings it off-screen.
