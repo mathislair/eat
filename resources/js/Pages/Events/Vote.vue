@@ -132,23 +132,20 @@ const submit = () => form.post(route('events.vote.store', props.event.id));
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-bold leading-tight text-ink dark:text-cream">
-                    Vote — {{ event.name }}
-                </h2>
-                <Link
-                    :href="route('events.hub', event.id)"
-                    class="font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
-                >
-                    Back to event
-                </Link>
-            </div>
+            <h2 class="min-w-0 flex-1 truncate text-lg font-bold leading-tight text-ink dark:text-cream">
+                Vote — {{ event.name }}
+            </h2>
+            <Link
+                :href="route('events.hub', event.id)"
+                class="shrink-0 font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
+            >
+                Back
+            </Link>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-2xl space-y-5 px-4 sm:px-6">
-                <!-- Progress + legend -->
-                <div class="card">
+        <div class="space-y-4">
+            <!-- Progress + legend -->
+            <div class="card">
                     <div class="flex items-center justify-between gap-3">
                         <p class="font-display text-sm font-bold text-ink-muted dark:text-gray-300">
                             Step {{ stepIndex + 1 }} of {{ steps.length }}
@@ -342,6 +339,5 @@ const submit = () => form.post(route('events.vote.store', props.event.id));
                     </div>
                 </div>
             </div>
-        </div>
     </AuthenticatedLayout>
 </template>

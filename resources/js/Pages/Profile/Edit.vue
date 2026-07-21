@@ -22,15 +22,14 @@ const user = usePage().props.auth.user;
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-bold leading-tight text-ink dark:text-cream">
+            <h2 class="min-w-0 flex-1 truncate text-lg font-bold leading-tight text-ink dark:text-cream">
                 Profile
             </h2>
         </template>
 
-        <div class="py-8">
-            <div class="mx-auto max-w-2xl space-y-5 px-4 sm:px-6">
-                <!-- Account summary -->
-                <div class="card flex items-center justify-between gap-3">
+        <div class="space-y-4">
+            <!-- Account summary -->
+            <div class="card flex items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
                         <span class="flex h-12 w-12 items-center justify-center rounded-full border-3 border-ink bg-sunny-300 font-display text-lg font-bold text-ink">
                             {{ user.name.charAt(0).toUpperCase() }}
@@ -56,9 +55,8 @@ const user = usePage().props.auth.user;
                     <UpdatePasswordForm />
                 </div>
 
-                <div class="card">
-                    <DeleteUserForm />
-                </div>
+            <div class="card">
+                <DeleteUserForm />
             </div>
         </div>
     </AuthenticatedLayout>
