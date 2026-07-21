@@ -4,7 +4,7 @@ import DangerButton from '@/Components/DangerButton.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps({
     event: {
@@ -26,6 +26,14 @@ const validate = () => {
         router.post(route('events.validate', props.event.id));
     }
 };
+
+// The group's pick: the most-wanted cuisine nobody vetoed. The tally is
+// ordered survivors-first, so it's simply the top row — as long as it wasn't
+// vetoed and someone actually wanted it.
+const topPick = computed(() => {
+    const top = props.summary?.nationalities?.[0];
+    return top && !top.vetoed && top.wants > 0 ? top : null;
+});
 
 const copied = ref(false);
 
@@ -132,29 +140,64 @@ const leave = () => {
                 <!-- Summary (closed) -->
                 <div v-else-if="summary" class="card">
                     <h3 class="font-display text-lg font-bold text-ink dark:text-cream">
-                        Summary ✨
+                        The verdict ✨
                     </h3>
                     <p class="mt-1 text-sm font-semibold text-ink-muted dark:text-gray-400">
                         {{ summary.participation.voted }}/{{ summary.participation.total }} voted
                     </p>
 
+                    <!-- Decision banner -->
+                    <div
+                        v-if="topPick"
+                        class="mt-4 rounded-blob border-3 border-ink bg-mint-300 px-5 py-4 text-ink shadow-cartoon"
+                    >
+                        <p class="font-display text-xs font-bold uppercase tracking-widest">
+                            We're eating
+                        </p>
+                        <p class="font-display text-2xl font-bold">🏆 {{ topPick.name }}</p>
+                        <p class="mt-0.5 text-sm font-semibold">
+                            👍 {{ topPick.wants }} want{{ topPick.wants === 1 ? '' : 's' }} · vetoed by nobody
+                        </p>
+                    </div>
+                    <div
+                        v-else
+                        class="mt-4 rounded-blob border-3 border-dashed border-ink/40 px-5 py-4 text-sm font-semibold text-ink-muted dark:border-cream/30 dark:text-gray-300"
+                    >
+                        No survivor — every wanted cuisine got vetoed. Time to flip a coin! 🪙
+                    </div>
+
                     <h4 class="mt-5 font-display text-sm font-bold uppercase tracking-wide text-ink-muted dark:text-gray-300">
-                        Nationalities
+                        Cuisines
                     </h4>
                     <ol v-if="summary.nationalities.length" class="mt-2 space-y-2">
                         <li
                             v-for="(n, i) in summary.nationalities"
                             :key="n.id"
-                            class="flex items-center justify-between rounded-xl2 border-3 px-3 py-2"
-                            :class="i === 0
+                            class="flex items-center justify-between gap-3 rounded-xl2 border-3 px-3 py-2"
+                            :class="i === 0 && !n.vetoed && n.wants > 0
                                 ? 'border-ink bg-sunny-200 shadow-cartoon-xs'
-                                : 'border-transparent bg-cream-200 dark:bg-ink-700'"
+                                : n.vetoed
+                                    ? 'border-transparent bg-berry-100 dark:bg-ink-700'
+                                    : 'border-transparent bg-cream-200 dark:bg-ink-700'"
                         >
-                            <span class="font-semibold text-ink dark:text-cream">
-                                <span v-if="i === 0">🏆 </span>{{ n.name }}
+                            <span
+                                class="font-semibold text-ink dark:text-cream"
+                                :class="{ 'line-through opacity-70': n.vetoed }"
+                            >
+                                <span v-if="i === 0 && !n.vetoed && n.wants > 0">🏆 </span>
+                                <span v-else-if="n.vetoed">⛔ </span>{{ n.name }}
                             </span>
-                            <span class="text-sm font-bold text-ink-muted dark:text-gray-400">
-                                {{ n.votes }} {{ n.votes === 1 ? 'vote' : 'votes' }}
+                            <span class="flex items-center gap-2 text-sm font-bold text-ink-muted dark:text-gray-400">
+                                <span title="Want">👍 {{ n.wants }}</span>
+                                <span title="Veto">🔴 {{ n.avoids }}</span>
+                                <span
+                                    class="badge"
+                                    :class="n.vetoed
+                                        ? 'badge-berry'
+                                        : n.wants > 0 ? 'badge-mint' : 'bg-cream-200 text-ink dark:bg-ink-700 dark:text-cream'"
+                                >
+                                    {{ n.vetoed ? 'Vetoed' : n.wants > 0 ? 'In' : '—' }}
+                                </span>
                             </span>
                         </li>
                     </ol>
@@ -175,10 +218,15 @@ const leave = () => {
                                 v-for="(item, i) in items"
                                 :key="item.value"
                                 class="badge"
-                                :class="i === 0 ? 'bg-punch-500 text-white' : 'bg-cream-200 text-ink dark:bg-ink-700 dark:text-cream'"
+                                :class="i === 0 && !item.vetoed && item.wants > 0
+                                    ? 'bg-punch-500 text-white'
+                                    : item.vetoed
+                                        ? 'badge-berry line-through'
+                                        : 'bg-cream-200 text-ink dark:bg-ink-700 dark:text-cream'"
                             >
-                                <span v-if="i === 0">🏆</span>
-                                {{ item.label }} · {{ item.votes }}
+                                <span v-if="i === 0 && !item.vetoed && item.wants > 0">🏆</span>
+                                <span v-else-if="item.vetoed">⛔</span>
+                                {{ item.label }} · 👍{{ item.wants }}
                             </span>
                         </div>
                         <p v-else class="mt-2 text-sm font-semibold text-ink-muted dark:text-gray-400">—</p>

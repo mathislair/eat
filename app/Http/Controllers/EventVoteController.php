@@ -32,7 +32,9 @@ class EventVoteController extends Controller
             'nationalities' => Nationality::orderBy('name')->get(['id', 'name']),
             'criteriaTypes' => $this->criteriaTypes(),
             'ballot' => [
-                'nationalities' => $ballot?->nationalities->pluck('id')->all() ?? [],
+                'nationalities' => $ballot?->nationalities
+                    ->mapWithKeys(fn ($n) => [$n->id => $n->pivot->preference])
+                    ->all() ?? (object) [],
                 'criteria' => $this->groupCriteria($ballot),
             ],
         ]);
@@ -50,13 +52,22 @@ class EventVoteController extends Controller
                 ['submitted_at' => now()],
             );
 
-            $ballot->nationalities()->sync($data['nationalities'] ?? []);
+            // Each picked nationality carries its preference on the pivot.
+            $ballot->nationalities()->sync(
+                collect($data['nationalities'] ?? [])
+                    ->mapWithKeys(fn (string $preference, $id) => [(int) $id => ['preference' => $preference]])
+                    ->all()
+            );
 
             // Replace criteria wholesale — the submission is the full ballot.
             $ballot->criteria()->delete();
             foreach (($data['criteria'] ?? []) as $type => $values) {
-                foreach ($values as $value) {
-                    $ballot->criteria()->create(['type' => $type, 'value' => $value]);
+                foreach ($values as $value => $preference) {
+                    $ballot->criteria()->create([
+                        'type' => $type,
+                        'value' => $value,
+                        'preference' => $preference,
+                    ]);
                 }
             }
         });
@@ -80,19 +91,23 @@ class EventVoteController extends Controller
     }
 
     /**
-     * The attendee's current criteria selections, grouped by type.
+     * The attendee's current criteria preferences, grouped by type as a map of
+     * value → preference (e.g. ['price' => ['€€' => 'want'], ...]).
      *
-     * @return array<string, list<string>>
+     * @return array<string, object|array<string, string>>
      */
     private function groupCriteria(?EventVote $ballot): array
     {
         $grouped = [];
         foreach (AttributeType::cases() as $type) {
-            $grouped[$type->value] = [];
+            // An empty map so the front-end always sees an object per type.
+            $grouped[$type->value] = (object) [];
         }
 
         foreach ($ballot?->criteria ?? [] as $criterion) {
-            $grouped[$criterion->type->value][] = $criterion->value;
+            $type = $criterion->type->value;
+            $grouped[$type] = (array) $grouped[$type];
+            $grouped[$type][$criterion->value] = $criterion->preference->value;
         }
 
         return $grouped;

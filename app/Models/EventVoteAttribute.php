@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use App\Enums\AttributeType;
+use App\Enums\VotePreference;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['type', 'value'])]
+#[Fillable(['type', 'value', 'preference'])]
 class EventVoteAttribute extends Model
 {
     protected $table = 'event_vote_attribute';
@@ -21,6 +22,7 @@ class EventVoteAttribute extends Model
     {
         return [
             'type' => AttributeType::class,
+            'preference' => VotePreference::class,
         ];
     }
 

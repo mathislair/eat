@@ -40,7 +40,7 @@ class EventVoteTest extends TestCase
         $this->actingAs($outsider)->get("/events/{$event->id}/vote")->assertForbidden();
     }
 
-    public function test_an_attendee_can_submit_a_ballot(): void
+    public function test_an_attendee_can_submit_a_ballot_with_preferences(): void
     {
         $user = User::factory()->create();
         $event = $this->eventWithAttendee($user);
@@ -48,18 +48,38 @@ class EventVoteTest extends TestCase
         $thai = Nationality::factory()->create(['name' => 'Thai']);
 
         $this->actingAs($user)->post("/events/{$event->id}/vote", [
-            'nationalities' => [$italian->id, $thai->id],
+            'nationalities' => [$italian->id => 'want', $thai->id => 'avoid'],
             'criteria' => [
-                'price' => ['€€'],
-                'diet' => ['vegan'],
-                'style' => ['spicy'],
+                'price' => ['€€' => 'want'],
+                'diet' => ['vegan' => 'avoid'],
+                'style' => ['spicy' => 'want'],
             ],
         ])->assertRedirect(route('events.show', $event));
 
         $ballot = EventVote::firstWhere(['event_id' => $event->id, 'user_id' => $user->id]);
         $this->assertNotNull($ballot);
         $this->assertEqualsCanonicalizing([$italian->id, $thai->id], $ballot->nationalities->pluck('id')->all());
+        $this->assertSame('want', $ballot->nationalities->firstWhere('id', $italian->id)->pivot->preference);
+        $this->assertSame('avoid', $ballot->nationalities->firstWhere('id', $thai->id)->pivot->preference);
         $this->assertCount(3, $ballot->criteria);
+        $this->assertSame('avoid', $ballot->criteria->firstWhere('value', 'vegan')->preference->value);
+    }
+
+    public function test_neutral_options_are_not_stored(): void
+    {
+        $user = User::factory()->create();
+        $event = $this->eventWithAttendee($user);
+        $italian = Nationality::factory()->create();
+
+        // Only "want"/"avoid" are ever sent; a neutral option is simply omitted.
+        $this->actingAs($user)->post("/events/{$event->id}/vote", [
+            'nationalities' => [$italian->id => 'want'],
+            'criteria' => ['price' => [], 'diet' => [], 'style' => []],
+        ]);
+
+        $ballot = EventVote::firstWhere(['event_id' => $event->id, 'user_id' => $user->id]);
+        $this->assertCount(1, $ballot->nationalities);
+        $this->assertCount(0, $ballot->criteria);
     }
 
     public function test_submitting_again_replaces_the_ballot_without_duplicating(): void
@@ -70,17 +90,18 @@ class EventVoteTest extends TestCase
         $b = Nationality::factory()->create();
 
         $this->actingAs($user)->post("/events/{$event->id}/vote", [
-            'nationalities' => [$a->id],
-            'criteria' => ['price' => ['€']],
+            'nationalities' => [$a->id => 'want'],
+            'criteria' => ['price' => ['€' => 'want']],
         ]);
         $this->actingAs($user)->post("/events/{$event->id}/vote", [
-            'nationalities' => [$b->id],
-            'criteria' => ['price' => ['€€€']],
+            'nationalities' => [$b->id => 'avoid'],
+            'criteria' => ['price' => ['€€€' => 'want']],
         ]);
 
         $this->assertSame(1, EventVote::where('event_id', $event->id)->where('user_id', $user->id)->count());
         $ballot = EventVote::firstWhere(['event_id' => $event->id, 'user_id' => $user->id]);
         $this->assertEqualsCanonicalizing([$b->id], $ballot->nationalities->pluck('id')->all());
+        $this->assertSame('avoid', $ballot->nationalities->firstWhere('id', $b->id)->pivot->preference);
         $this->assertSame('€€€', $ballot->criteria->firstWhere('type.value', 'price')->value);
     }
 
@@ -110,8 +131,29 @@ class EventVoteTest extends TestCase
         $event = $this->eventWithAttendee($user);
 
         $this->actingAs($user)->post("/events/{$event->id}/vote", [
-            'criteria' => ['price' => ['banana']],
-        ])->assertSessionHasErrors('criteria.price.0');
+            'criteria' => ['price' => ['banana' => 'want']],
+        ])->assertSessionHasErrors('criteria.price');
+    }
+
+    public function test_an_invalid_preference_is_rejected(): void
+    {
+        $user = User::factory()->create();
+        $event = $this->eventWithAttendee($user);
+        $italian = Nationality::factory()->create();
+
+        $this->actingAs($user)->post("/events/{$event->id}/vote", [
+            'nationalities' => [$italian->id => 'maybe'],
+        ])->assertSessionHasErrors("nationalities.{$italian->id}");
+    }
+
+    public function test_an_unknown_nationality_is_rejected(): void
+    {
+        $user = User::factory()->create();
+        $event = $this->eventWithAttendee($user);
+
+        $this->actingAs($user)->post("/events/{$event->id}/vote", [
+            'nationalities' => [999999 => 'want'],
+        ])->assertSessionHasErrors('nationalities.999999');
     }
 
     public function test_the_creator_can_validate_the_event(): void
@@ -164,7 +206,7 @@ class EventVoteTest extends TestCase
             );
     }
 
-    public function test_the_summary_ranks_nationalities_by_votes_when_closed(): void
+    public function test_the_summary_ranks_cuisines_by_wants_when_none_are_vetoed(): void
     {
         $creator = User::factory()->create();
         $event = Event::factory()->create(['creator_id' => $creator->id]);
@@ -172,18 +214,47 @@ class EventVoteTest extends TestCase
         $thai = Nationality::factory()->create(['name' => 'Thai']);
         $mexican = Nationality::factory()->create(['name' => 'Mexican']);
 
-        // Thai=3, Italian=2, Mexican=1
-        $this->castBallot($event, $creator, [$italian, $thai]);
-        $this->castBallot($event, User::factory()->create(), [$thai, $mexican]);
-        $this->castBallot($event, User::factory()->create(), [$italian, $thai]);
+        // Wants — Thai=3, Italian=2, Mexican=1. No vetoes.
+        $this->castBallot($event, $creator, [$italian->id => 'want', $thai->id => 'want']);
+        $this->castBallot($event, User::factory()->create(), [$thai->id => 'want', $mexican->id => 'want']);
+        $this->castBallot($event, User::factory()->create(), [$italian->id => 'want', $thai->id => 'want']);
 
         $event->update(['status' => EventStatus::Closed, 'validated_at' => now()]);
 
         $this->actingAs($creator)->get("/events/{$event->id}")
             ->assertInertia(fn (Assert $page) => $page
                 ->where('summary.nationalities.0.name', 'Thai')
-                ->where('summary.nationalities.0.votes', 3)
+                ->where('summary.nationalities.0.wants', 3)
+                ->where('summary.nationalities.0.vetoed', false)
                 ->where('summary.participation.voted', 3)
+            );
+    }
+
+    public function test_a_single_avoid_vetoes_a_cuisine_no_matter_how_wanted(): void
+    {
+        $creator = User::factory()->create();
+        $event = Event::factory()->create(['creator_id' => $creator->id]);
+        $pizza = Nationality::factory()->create(['name' => 'Pizza']);
+        $kebab = Nationality::factory()->create(['name' => 'Kebab']);
+
+        // Kebab is wanted more (3 vs 2) but one lone veto rules it out entirely,
+        // so Pizza wins despite fewer wants — the "surtout pas" decides.
+        $this->castBallot($event, $creator, [$pizza->id => 'want', $kebab->id => 'want']);
+        $this->castBallot($event, User::factory()->create(), [$pizza->id => 'want', $kebab->id => 'want']);
+        $this->castBallot($event, User::factory()->create(), [$kebab->id => 'want']);
+        $this->castBallot($event, User::factory()->create(), [$kebab->id => 'avoid']);
+
+        $event->update(['status' => EventStatus::Closed, 'validated_at' => now()]);
+
+        $this->actingAs($creator)->get("/events/{$event->id}")
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('summary.nationalities.0.name', 'Pizza')
+                ->where('summary.nationalities.0.wants', 2)
+                ->where('summary.nationalities.0.vetoed', false)
+                ->where('summary.nationalities.1.name', 'Kebab')
+                ->where('summary.nationalities.1.wants', 3)
+                ->where('summary.nationalities.1.vetoed', true)
+                ->where('summary.nationalities.1.avoids', 1)
             );
     }
 
@@ -192,20 +263,25 @@ class EventVoteTest extends TestCase
         $creator = User::factory()->create();
         $event = Event::factory()->create(['creator_id' => $creator->id]);
 
-        // price: €€ x2, € x1  => winner €€
-        $this->castBallot($event, $creator, [], ['price' => ['€€']]);
-        $this->castBallot($event, User::factory()->create(), [], ['price' => ['€€']]);
-        $this->castBallot($event, User::factory()->create(), [], ['price' => ['€']]);
+        // price: €€ wanted x2, € wanted x1  => winner €€ (2 wants, no veto).
+        $this->castBallot($event, $creator, [], ['price' => ['€€' => 'want']]);
+        $this->castBallot($event, User::factory()->create(), [], ['price' => ['€€' => 'want']]);
+        $this->castBallot($event, User::factory()->create(), [], ['price' => ['€' => 'want']]);
 
         $event->update(['status' => EventStatus::Closed, 'validated_at' => now()]);
 
         $this->actingAs($creator)->get("/events/{$event->id}")
             ->assertInertia(fn (Assert $page) => $page
                 ->where('summary.criteria.price.0.value', '€€')
-                ->where('summary.criteria.price.0.votes', 2)
+                ->where('summary.criteria.price.0.wants', 2)
+                ->where('summary.criteria.price.0.vetoed', false)
             );
     }
 
+    /**
+     * @param  array<int, string>  $nationalities  [nationality id => preference]
+     * @param  array<string, array<string, string>>  $criteria  [type => [value => preference]]
+     */
     private function castBallot(Event $event, User $user, array $nationalities = [], array $criteria = []): void
     {
         $event->attendees()->syncWithoutDetaching($user);
@@ -214,10 +290,12 @@ class EventVoteTest extends TestCase
             'user_id' => $user->id,
             'submitted_at' => now(),
         ]);
-        $ballot->nationalities()->attach(collect($nationalities)->pluck('id')->all());
+        $ballot->nationalities()->sync(
+            collect($nationalities)->mapWithKeys(fn ($pref, $id) => [$id => ['preference' => $pref]])->all()
+        );
         foreach ($criteria as $type => $values) {
-            foreach ($values as $value) {
-                $ballot->criteria()->create(['type' => $type, 'value' => $value]);
+            foreach ($values as $value => $pref) {
+                $ballot->criteria()->create(['type' => $type, 'value' => $value, 'preference' => $pref]);
             }
         }
     }

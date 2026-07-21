@@ -182,6 +182,9 @@
     .badge-sky {
         @apply bg-sky-300 text-ink;
     }
+    .badge-berry {
+        @apply bg-berry-300 text-ink;
+    }
 
     /* ── Chips (toggleable) ──────────────────────────────────────────────
      * Interactive pills for multi-select filters & vote options.
@@ -204,4 +207,85 @@
         @apply bg-punch-500 text-white;
         box-shadow: 2px 2px 0 0 var(--ds-shadow);
     }
+
+    /* ── Preference tiles (three-state) ──────────────────────────────────
+     * Square, tappable buttons for the immersive vote. One tap cycles
+     * neutral → want (🟢) → avoid (🔴) → neutral. The colour and icon carry
+     * the whole meaning, so a ballot reads at a glance.
+     */
+    .pref-tile {
+        @apply relative flex min-h-[4.5rem] cursor-pointer select-none flex-col items-center justify-center gap-1.5 rounded-xl2 border-3 px-2 py-3 text-center font-display text-sm font-bold leading-tight transition-transform duration-100 ease-out;
+        border-color: var(--ds-line);
+        background-color: var(--ds-surface);
+        color: var(--ds-text);
+        box-shadow: 3px 3px 0 0 var(--ds-shadow);
+    }
+    .pref-tile:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 4px 4px 0 0 var(--ds-shadow);
+    }
+    .pref-tile:active {
+        transform: translate(2px, 2px);
+        box-shadow: 1px 1px 0 0 var(--ds-shadow);
+    }
+    .pref-tile:focus-visible {
+        outline: none;
+        box-shadow: 3px 3px 0 0 var(--ds-shadow), 0 0 0 4px var(--ds-focus);
+    }
+    .pref-tile--want {
+        @apply bg-mint-300 text-ink;
+    }
+    .pref-tile--avoid {
+        @apply bg-berry-400 text-white;
+    }
+    .pref-tile__icon {
+        @apply flex h-7 w-7 items-center justify-center rounded-full border-3;
+        border-color: currentColor;
+    }
+    .pref-tile__icon svg {
+        @apply h-4 w-4;
+    }
+    /* Neutral: quiet the icon so picked tiles pop against the wall. */
+    .pref-tile:not(.pref-tile--want):not(.pref-tile--avoid) .pref-tile__icon {
+        color: var(--ds-muted);
+    }
+    .pref-tile__label {
+        @apply block w-full break-words;
+    }
+
+    /* Compact key explaining the three tile states. */
+    .pref-legend {
+        @apply inline-flex items-center gap-1.5 rounded-full border-3 px-3 py-1 font-display text-xs font-bold;
+        border-color: var(--ds-line);
+        background-color: var(--ds-surface);
+        color: var(--ds-text);
+    }
+    .pref-legend__dot {
+        @apply flex h-5 w-5 items-center justify-center rounded-full border-3 text-[0.7rem] leading-none;
+        border-color: var(--ds-line);
+        background-color: var(--ds-surface);
+        color: var(--ds-muted);
+    }
+    .pref-legend__dot--want {
+        @apply bg-mint-300 text-ink;
+    }
+    .pref-legend__dot--avoid {
+        @apply bg-berry-400 text-white;
+    }
+}
+
+/* Icon swap animation for a tactile, immersive toggle. */
+.pref-pop-enter-active,
+.pref-pop-leave-active {
+    transition:
+        transform 0.14s ease-out,
+        opacity 0.14s ease-out;
+}
+.pref-pop-enter-from {
+    transform: scale(0.4) rotate(-12deg);
+    opacity: 0;
+}
+.pref-pop-leave-to {
+    transform: scale(0.4);
+    opacity: 0;
 }
