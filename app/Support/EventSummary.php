@@ -8,10 +8,11 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Aggregates a closed event's ballots into a shareable summary and, above all,
- * a group decision: every option is scored by how the room felt about it —
- * "want" (🟢) lifts it, "avoid" (🔴) drags it down. The highest net score is
- * where the group is heading. Pure read, computed on the fly since votes are
- * frozen once the event is closed.
+ * a group decision. "Avoid" (🔴) is a hard veto: a single one rules an option
+ * out for everyone, however many wants it drew. What's left is ranked by how
+ * many people wanted it, and the most-wanted survivor is where the group is
+ * heading. Pure read, computed on the fly since votes are frozen once the
+ * event is closed.
  */
 class EventSummary
 {
@@ -31,7 +32,7 @@ class EventSummary
     }
 
     /**
-     * @return list<array{id: int, name: string, wants: int, avoids: int, score: int}>
+     * @return list<array{id: int, name: string, wants: int, avoids: int, vetoed: bool}>
      */
     private static function nationalityTally(Event $event): array
     {
@@ -51,17 +52,17 @@ class EventSummary
                 'name' => $row->name,
                 'wants' => (int) $row->wants,
                 'avoids' => (int) $row->avoids,
-                'score' => (int) $row->wants - (int) $row->avoids,
+                'vetoed' => (int) $row->avoids > 0,
             ])
-            ->sort(static::byScore(fn ($n) => $n['name']))
+            ->sort(static::byWinner(fn ($n) => $n['name']))
             ->values()
             ->all();
     }
 
     /**
-     * Tally per attribute type, each ranked by net score (wants − avoids).
+     * Tally per attribute type, vetoed values sunk to the bottom.
      *
-     * @return array<string, list<array{value: string, label: string, wants: int, avoids: int, score: int}>>
+     * @return array<string, list<array{value: string, label: string, wants: int, avoids: int, vetoed: bool}>>
      */
     private static function criteriaTally(Event $event): array
     {
@@ -86,9 +87,9 @@ class EventSummary
                     'label' => static::labelFor($type, $row->value),
                     'wants' => (int) $row->wants,
                     'avoids' => (int) $row->avoids,
-                    'score' => (int) $row->wants - (int) $row->avoids,
+                    'vetoed' => (int) $row->avoids > 0,
                 ])
-                ->sort(static::byScore(fn ($item) => static::labelFor($type, $item['value'])))
+                ->sort(static::byWinner(fn ($item) => static::labelFor($type, $item['value'])))
                 ->values()
                 ->all();
         }
@@ -107,14 +108,15 @@ class EventSummary
     }
 
     /**
-     * Rank by score desc, then most wants, then a stable tiebreak label asc.
+     * Survivors first, then most-wanted, then a stable tiebreak label asc — so
+     * index 0 is the group's pick unless it too was vetoed.
      *
      * @param  callable(array<string, mixed>): string  $label
      * @return callable(array<string, mixed>, array<string, mixed>): int
      */
-    private static function byScore(callable $label): callable
+    private static function byWinner(callable $label): callable
     {
-        return fn (array $a, array $b): int => [$b['score'], $b['wants']] <=> [$a['score'], $a['wants']]
+        return fn (array $a, array $b): int => [$a['vetoed'] ? 1 : 0, $b['wants']] <=> [$b['vetoed'] ? 1 : 0, $a['wants']]
             ?: strcmp($label($a), $label($b));
     }
 

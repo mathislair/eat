@@ -206,7 +206,7 @@ class EventVoteTest extends TestCase
             );
     }
 
-    public function test_the_summary_ranks_cuisines_by_net_score_when_closed(): void
+    public function test_the_summary_ranks_cuisines_by_wants_when_none_are_vetoed(): void
     {
         $creator = User::factory()->create();
         $event = Event::factory()->create(['creator_id' => $creator->id]);
@@ -214,7 +214,7 @@ class EventVoteTest extends TestCase
         $thai = Nationality::factory()->create(['name' => 'Thai']);
         $mexican = Nationality::factory()->create(['name' => 'Mexican']);
 
-        // Wants — Thai=3, Italian=2, Mexican=1.
+        // Wants — Thai=3, Italian=2, Mexican=1. No vetoes.
         $this->castBallot($event, $creator, [$italian->id => 'want', $thai->id => 'want']);
         $this->castBallot($event, User::factory()->create(), [$thai->id => 'want', $mexican->id => 'want']);
         $this->castBallot($event, User::factory()->create(), [$italian->id => 'want', $thai->id => 'want']);
@@ -224,25 +224,24 @@ class EventVoteTest extends TestCase
         $this->actingAs($creator)->get("/events/{$event->id}")
             ->assertInertia(fn (Assert $page) => $page
                 ->where('summary.nationalities.0.name', 'Thai')
-                ->where('summary.nationalities.0.score', 3)
                 ->where('summary.nationalities.0.wants', 3)
+                ->where('summary.nationalities.0.vetoed', false)
                 ->where('summary.participation.voted', 3)
             );
     }
 
-    public function test_avoid_votes_drag_a_cuisine_below_a_less_wanted_one(): void
+    public function test_a_single_avoid_vetoes_a_cuisine_no_matter_how_wanted(): void
     {
         $creator = User::factory()->create();
         $event = Event::factory()->create(['creator_id' => $creator->id]);
         $pizza = Nationality::factory()->create(['name' => 'Pizza']);
         $kebab = Nationality::factory()->create(['name' => 'Kebab']);
 
-        // Kebab is wanted more (3 vs 2) but its two vetoes sink its net score to 1,
-        // so Pizza (net 2) wins — the "surtout pas" actually decides.
+        // Kebab is wanted more (3 vs 2) but one lone veto rules it out entirely,
+        // so Pizza wins despite fewer wants — the "surtout pas" decides.
         $this->castBallot($event, $creator, [$pizza->id => 'want', $kebab->id => 'want']);
         $this->castBallot($event, User::factory()->create(), [$pizza->id => 'want', $kebab->id => 'want']);
         $this->castBallot($event, User::factory()->create(), [$kebab->id => 'want']);
-        $this->castBallot($event, User::factory()->create(), [$kebab->id => 'avoid']);
         $this->castBallot($event, User::factory()->create(), [$kebab->id => 'avoid']);
 
         $event->update(['status' => EventStatus::Closed, 'validated_at' => now()]);
@@ -250,10 +249,12 @@ class EventVoteTest extends TestCase
         $this->actingAs($creator)->get("/events/{$event->id}")
             ->assertInertia(fn (Assert $page) => $page
                 ->where('summary.nationalities.0.name', 'Pizza')
-                ->where('summary.nationalities.0.score', 2)
+                ->where('summary.nationalities.0.wants', 2)
+                ->where('summary.nationalities.0.vetoed', false)
                 ->where('summary.nationalities.1.name', 'Kebab')
-                ->where('summary.nationalities.1.score', 1)
-                ->where('summary.nationalities.1.avoids', 2)
+                ->where('summary.nationalities.1.wants', 3)
+                ->where('summary.nationalities.1.vetoed', true)
+                ->where('summary.nationalities.1.avoids', 1)
             );
     }
 
@@ -262,7 +263,7 @@ class EventVoteTest extends TestCase
         $creator = User::factory()->create();
         $event = Event::factory()->create(['creator_id' => $creator->id]);
 
-        // price: €€ wanted x2, € wanted x1  => winner €€ (net 2).
+        // price: €€ wanted x2, € wanted x1  => winner €€ (2 wants, no veto).
         $this->castBallot($event, $creator, [], ['price' => ['€€' => 'want']]);
         $this->castBallot($event, User::factory()->create(), [], ['price' => ['€€' => 'want']]);
         $this->castBallot($event, User::factory()->create(), [], ['price' => ['€' => 'want']]);
@@ -272,8 +273,8 @@ class EventVoteTest extends TestCase
         $this->actingAs($creator)->get("/events/{$event->id}")
             ->assertInertia(fn (Assert $page) => $page
                 ->where('summary.criteria.price.0.value', '€€')
-                ->where('summary.criteria.price.0.score', 2)
                 ->where('summary.criteria.price.0.wants', 2)
+                ->where('summary.criteria.price.0.vetoed', false)
             );
     }
 

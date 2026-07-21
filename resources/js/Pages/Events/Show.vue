@@ -27,14 +27,13 @@ const validate = () => {
     }
 };
 
-// The group's pick: the top-scoring cuisine, but only if the room actually
-// leans towards it (net score above zero).
+// The group's pick: the most-wanted cuisine nobody vetoed. The tally is
+// ordered survivors-first, so it's simply the top row — as long as it wasn't
+// vetoed and someone actually wanted it.
 const topPick = computed(() => {
     const top = props.summary?.nationalities?.[0];
-    return top && top.score > 0 ? top : null;
+    return top && !top.vetoed && top.wants > 0 ? top : null;
 });
-
-const signed = (n) => (n > 0 ? `+${n}` : `${n}`);
 
 const copied = ref(false);
 
@@ -157,14 +156,14 @@ const leave = () => {
                         </p>
                         <p class="font-display text-2xl font-bold">🏆 {{ topPick.name }}</p>
                         <p class="mt-0.5 text-sm font-semibold">
-                            👍 {{ topPick.wants }} · 👎 {{ topPick.avoids }} · net {{ signed(topPick.score) }}
+                            👍 {{ topPick.wants }} want{{ topPick.wants === 1 ? '' : 's' }} · vetoed by nobody
                         </p>
                     </div>
                     <div
                         v-else
                         class="mt-4 rounded-blob border-3 border-dashed border-ink/40 px-5 py-4 text-sm font-semibold text-ink-muted dark:border-cream/30 dark:text-gray-300"
                     >
-                        No clear winner — the room stayed neutral. Time to flip a coin! 🪙
+                        No survivor — every wanted cuisine got vetoed. Time to flip a coin! 🪙
                     </div>
 
                     <h4 class="mt-5 font-display text-sm font-bold uppercase tracking-wide text-ink-muted dark:text-gray-300">
@@ -175,23 +174,29 @@ const leave = () => {
                             v-for="(n, i) in summary.nationalities"
                             :key="n.id"
                             class="flex items-center justify-between gap-3 rounded-xl2 border-3 px-3 py-2"
-                            :class="i === 0 && n.score > 0
+                            :class="i === 0 && !n.vetoed && n.wants > 0
                                 ? 'border-ink bg-sunny-200 shadow-cartoon-xs'
-                                : 'border-transparent bg-cream-200 dark:bg-ink-700'"
+                                : n.vetoed
+                                    ? 'border-transparent bg-berry-100 dark:bg-ink-700'
+                                    : 'border-transparent bg-cream-200 dark:bg-ink-700'"
                         >
-                            <span class="font-semibold text-ink dark:text-cream">
-                                <span v-if="i === 0 && n.score > 0">🏆 </span>{{ n.name }}
+                            <span
+                                class="font-semibold text-ink dark:text-cream"
+                                :class="{ 'line-through opacity-70': n.vetoed }"
+                            >
+                                <span v-if="i === 0 && !n.vetoed && n.wants > 0">🏆 </span>
+                                <span v-else-if="n.vetoed">⛔ </span>{{ n.name }}
                             </span>
                             <span class="flex items-center gap-2 text-sm font-bold text-ink-muted dark:text-gray-400">
                                 <span title="Want">👍 {{ n.wants }}</span>
-                                <span title="Avoid">👎 {{ n.avoids }}</span>
+                                <span title="Veto">🔴 {{ n.avoids }}</span>
                                 <span
                                     class="badge"
-                                    :class="n.score > 0
-                                        ? 'badge-mint'
-                                        : n.score < 0 ? 'badge-berry' : 'bg-cream-200 text-ink dark:bg-ink-700 dark:text-cream'"
+                                    :class="n.vetoed
+                                        ? 'badge-berry'
+                                        : n.wants > 0 ? 'badge-mint' : 'bg-cream-200 text-ink dark:bg-ink-700 dark:text-cream'"
                                 >
-                                    {{ signed(n.score) }}
+                                    {{ n.vetoed ? 'Vetoed' : n.wants > 0 ? 'In' : '—' }}
                                 </span>
                             </span>
                         </li>
@@ -213,12 +218,15 @@ const leave = () => {
                                 v-for="(item, i) in items"
                                 :key="item.value"
                                 class="badge"
-                                :class="i === 0 && item.score > 0
+                                :class="i === 0 && !item.vetoed && item.wants > 0
                                     ? 'bg-punch-500 text-white'
-                                    : 'bg-cream-200 text-ink dark:bg-ink-700 dark:text-cream'"
+                                    : item.vetoed
+                                        ? 'badge-berry line-through'
+                                        : 'bg-cream-200 text-ink dark:bg-ink-700 dark:text-cream'"
                             >
-                                <span v-if="i === 0 && item.score > 0">🏆</span>
-                                {{ item.label }} · {{ signed(item.score) }}
+                                <span v-if="i === 0 && !item.vetoed && item.wants > 0">🏆</span>
+                                <span v-else-if="item.vetoed">⛔</span>
+                                {{ item.label }} · 👍{{ item.wants }}
                             </span>
                         </div>
                         <p v-else class="mt-2 text-sm font-semibold text-ink-muted dark:text-gray-400">—</p>

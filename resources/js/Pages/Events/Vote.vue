@@ -87,8 +87,9 @@ const submit = () => form.post(route('events.vote.store', props.event.id));
                     </h3>
                     <p class="mt-1 text-sm font-semibold text-ink-muted dark:text-gray-300">
                         Tap each option to say how you feel. Tap again to change your
-                        mind. When the host closes voting, everyone's picks decide
-                        where we eat — a 🟢 lifts an option, a 🔴 drags it down.
+                        mind. When the host closes voting, the most-wanted option wins
+                        — but a single 🔴 vetoes it for the whole group, so use it
+                        wisely.
                     </p>
                     <div class="mt-4 flex flex-wrap gap-2">
                         <span class="pref-legend">
