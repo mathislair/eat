@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import PageHeader from '@/Components/PageHeader.vue';
+import PageTitle from '@/Components/PageTitle.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -30,9 +30,7 @@ const submit = () =>
     <Head title="Join an event" />
 
     <AuthenticatedLayout>
-        <template #header>
-            <PageHeader title="Join an event" />
-        </template>
+        <PageTitle title="Join an event" />
 
         <div class="card">
             <p class="text-sm font-semibold text-ink-muted dark:text-gray-400">
