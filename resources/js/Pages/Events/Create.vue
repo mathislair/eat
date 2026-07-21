@@ -27,15 +27,13 @@ const submit = () => form.post(route('events.store'));
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-bold leading-tight text-ink dark:text-cream">
+            <h2 class="min-w-0 flex-1 truncate text-lg font-bold leading-tight text-ink dark:text-cream">
                 New event
             </h2>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-xl sm:px-6 lg:px-8">
-                <div class="card">
-                    <form @submit.prevent="submit" class="space-y-6">
+        <div class="card">
+            <form @submit.prevent="submit" class="space-y-6">
                         <div>
                             <InputLabel for="name" value="Name" />
                             <TextInput
@@ -89,9 +87,7 @@ const submit = () => form.post(route('events.store'));
                                 Create event
                             </PrimaryButton>
                         </div>
-                    </form>
-                </div>
-            </div>
+            </form>
         </div>
     </AuthenticatedLayout>
 </template>

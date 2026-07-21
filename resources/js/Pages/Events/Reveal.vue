@@ -105,22 +105,19 @@ const refresh = () => router.reload({ only: ['restaurants', 'match', 'leader', '
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-bold leading-tight text-ink dark:text-cream">
-                    Pick a place — {{ event.name }}
-                </h2>
-                <Link
-                    :href="route('events.hub', event.id)"
-                    class="font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
-                >
-                    Back to event
-                </Link>
-            </div>
+            <h2 class="min-w-0 flex-1 truncate text-lg font-bold leading-tight text-ink dark:text-cream">
+                Pick a place — {{ event.name }}
+            </h2>
+            <Link
+                :href="route('events.hub', event.id)"
+                class="shrink-0 font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
+            >
+                Back
+            </Link>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-xl space-y-5 sm:px-6 lg:px-8">
-                <!-- Empty catalogue -->
+        <div class="space-y-4">
+            <!-- Empty catalogue -->
                 <div v-if="!total" class="card text-center">
                     <p class="text-5xl">🍽️</p>
                     <h3 class="mt-3 font-display text-lg font-bold text-ink dark:text-cream">
@@ -171,7 +168,7 @@ const refresh = () => router.reload({ only: ['restaurants', 'match', 'leader', '
                         </span>
                     </div>
 
-                    <div class="relative mx-auto h-[27rem] w-full">
+                    <div class="relative mx-auto h-[27rem] w-full max-w-sm">
                         <!-- Card behind (peek) -->
                         <div v-if="peek" class="swipe-card swipe-card--peek">
                             <div class="swipe-card__header" :class="headerTint(peek.position)">
@@ -314,7 +311,6 @@ const refresh = () => router.reload({ only: ['restaurants', 'match', 'leader', '
                         </Link>
                     </div>
                 </template>
-            </div>
         </div>
     </AuthenticatedLayout>
 </template>

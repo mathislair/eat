@@ -83,23 +83,20 @@ const leave = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-bold leading-tight text-ink dark:text-cream">
-                    {{ event.name }}
-                </h2>
-                <Link
-                    :href="route('events.index')"
-                    class="font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
-                >
-                    Back to events
-                </Link>
-            </div>
+            <h2 class="min-w-0 flex-1 truncate text-lg font-bold leading-tight text-ink dark:text-cream">
+                {{ event.name }}
+            </h2>
+            <Link
+                :href="route('events.index')"
+                class="shrink-0 font-display text-sm font-semibold text-grape-600 underline decoration-2 underline-offset-2 dark:text-grape-300"
+            >
+                Events
+            </Link>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-3xl space-y-6 sm:px-6 lg:px-8">
-                <!-- Details -->
-                <div class="card">
+        <div class="space-y-4">
+            <!-- Details -->
+            <div class="card">
                     <div class="flex items-start gap-4">
                         <span class="text-5xl">{{ mealEmoji[event.meal] }}</span>
                         <div>
@@ -318,7 +315,6 @@ const leave = () => {
                         Leave event
                     </DangerButton>
                 </div>
-            </div>
         </div>
     </AuthenticatedLayout>
 </template>

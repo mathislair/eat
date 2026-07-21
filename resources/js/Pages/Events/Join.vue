@@ -30,18 +30,16 @@ const submit = () =>
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-bold leading-tight text-ink dark:text-cream">
+            <h2 class="min-w-0 flex-1 truncate text-lg font-bold leading-tight text-ink dark:text-cream">
                 Join an event
             </h2>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-md sm:px-6 lg:px-8">
-                <div class="card">
-                    <p class="text-sm font-semibold text-ink-muted dark:text-gray-400">
-                        Enter the invite code the host shared with you.
-                    </p>
-                    <form @submit.prevent="submit" class="mt-6 space-y-6">
+        <div class="card">
+            <p class="text-sm font-semibold text-ink-muted dark:text-gray-400">
+                Enter the invite code the host shared with you.
+            </p>
+            <form @submit.prevent="submit" class="mt-6 space-y-6">
                         <div>
                             <InputLabel for="invite_code" value="Invite code" />
                             <TextInput
@@ -64,9 +62,7 @@ const submit = () =>
                             </Link>
                             <PrimaryButton :disabled="form.processing">Join</PrimaryButton>
                         </div>
-                    </form>
-                </div>
-            </div>
+            </form>
         </div>
     </AuthenticatedLayout>
 </template>
