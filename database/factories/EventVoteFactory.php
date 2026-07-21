@@ -3,11 +3,12 @@
 namespace Database\Factories;
 
 use App\Models\Event;
+use App\Models\EventVote;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\EventVote>
+ * @extends Factory<EventVote>
  */
 class EventVoteFactory extends Factory
 {

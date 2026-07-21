@@ -16,8 +16,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Catalogue of nationalities and their groups (Asian, Spicy, …).
+        // Catalogue of nationalities and their groups (Asian, Spicy, …), plus
+        // the starter restaurant catalogue matched against them.
         $this->call(NationalitySeeder::class);
+        $this->call(RestaurantSeeder::class);
 
         $users = User::factory(10)->create();
 

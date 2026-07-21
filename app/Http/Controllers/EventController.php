@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enums\EventStatus;
+use App\Enums\Meal;
 use App\Http\Requests\JoinEventRequest;
 use App\Http\Requests\StoreEventRequest;
 use App\Models\Event;
+use App\Models\Restaurant;
 use App\Support\EventSummary;
+use App\Support\RestaurantMatcher;
+use App\Support\SwipeResult;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -95,7 +99,36 @@ class EventController extends Controller
                 'total' => $event->attendees->count(),
             ],
             'summary' => $event->isClosed() ? EventSummary::build($event) : null,
+            'reveal' => $this->revealSummary($event),
         ]);
+    }
+
+    /**
+     * A peek at the restaurant reveal for the event card: how many spots made
+     * the shortlist and whether the group has already agreed on one.
+     *
+     * @return array{count: int, match: array{name: string, cuisine: string|null}|null}|null
+     */
+    private function revealSummary(Event $event): ?array
+    {
+        if (! $event->isClosed()) {
+            return null;
+        }
+
+        RestaurantMatcher::ensureFor($event);
+        $result = SwipeResult::for($event);
+
+        $match = $result['matchId']
+            ? Restaurant::with('nationality')->find($result['matchId'])
+            : null;
+
+        return [
+            'count' => count($result['tallies']),
+            'match' => $match ? [
+                'name' => $match->name,
+                'cuisine' => $match->nationality?->name,
+            ] : null,
+        ];
     }
 
     /**
@@ -109,6 +142,9 @@ class EventController extends Controller
             'status' => EventStatus::Closed,
             'validated_at' => now(),
         ]);
+
+        // Freeze the votes into a ranked restaurant shortlist to swipe through.
+        RestaurantMatcher::generate($event);
 
         return redirect()->route('events.show', $event);
     }
@@ -155,8 +191,8 @@ class EventController extends Controller
     private function mealOptions(): array
     {
         return array_map(
-            fn (\App\Enums\Meal $meal) => ['value' => $meal->value, 'label' => $meal->label()],
-            \App\Enums\Meal::cases(),
+            fn (Meal $meal) => ['value' => $meal->value, 'label' => $meal->label()],
+            Meal::cases(),
         );
     }
 }
