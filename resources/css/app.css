@@ -35,6 +35,16 @@
 }
 
 @layer base {
+    /*
+     * Kill the double-tap-to-zoom gesture (and the 300ms tap delay) app-wide
+     * so taps feel native in the PWA. "manipulation" keeps panning and
+     * pinch-to-zoom, so accessibility zoom still works. Elements that own a
+     * gesture (the swipe deck) override this below.
+     */
+    * {
+        touch-action: manipulation;
+    }
+
     body {
         background-color: var(--ds-bg);
         color: var(--ds-text);
@@ -139,7 +149,8 @@
     }
 
     .input {
-        @apply block w-full rounded-xl2 border-3 px-4 py-2.5 font-sans text-sm transition-shadow duration-100;
+        /* 16px keeps iOS Safari from zooming in when the field is focused. */
+        @apply block w-full rounded-xl2 border-3 px-4 py-2.5 font-sans text-base transition-shadow duration-100;
         border-color: var(--ds-line);
         background-color: var(--ds-surface);
         color: var(--ds-text);
@@ -306,6 +317,10 @@
         box-shadow: 6px 6px 0 0 var(--ds-shadow);
         cursor: grab;
         transition: transform 0.26s ease-out;
+    }
+    /* The whole card is the drag surface — no panning from any child either. */
+    .swipe-card * {
+        touch-action: none;
     }
     .swipe-card:active {
         cursor: grabbing;
