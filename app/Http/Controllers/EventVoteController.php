@@ -11,7 +11,6 @@ use App\Support\UserTaste;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,9 +19,14 @@ class EventVoteController extends Controller
     /**
      * The ballot form for an attendee, pre-filled with their current vote.
      */
-    public function edit(Request $request, Event $event): Response
+    public function edit(Request $request, Event $event): Response|RedirectResponse
     {
-        Gate::authorize('vote', $event);
+        // Right (attendee-only) is enforced by the `can:vote,event` middleware.
+        // If voting is over, there's no ballot to edit — move on to the reveal.
+        if (! $event->isVoting()) {
+            return redirect()->route('events.reveal', $event)
+                ->with('info', "Voting has closed — here's the shortlist to swipe.");
+        }
 
         $user = $request->user();
 
@@ -53,7 +57,13 @@ class EventVoteController extends Controller
 
     public function store(StoreEventVoteRequest $request, Event $event): RedirectResponse
     {
-        Gate::authorize('vote', $event);
+        // The voting window may have closed between loading the form and
+        // submitting (the host validated in the meantime). Don't 403 a good-
+        // faith ballot — drop the voter onto the reveal with a heads-up.
+        if (! $event->isVoting()) {
+            return redirect()->route('events.reveal', $event)
+                ->with('info', "Voting just closed, so your ballot wasn't saved.");
+        }
 
         $data = $request->validated();
 

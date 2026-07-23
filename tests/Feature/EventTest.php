@@ -6,6 +6,7 @@ use App\Enums\EventStatus;
 use App\Enums\Meal;
 use App\Models\Event;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -114,6 +115,21 @@ class EventTest extends TestCase
         $outsider = User::factory()->create();
 
         $this->actingAs($outsider)->get("/events/{$event->id}")->assertForbidden();
+    }
+
+    public function test_a_view_denial_carries_the_policy_message(): void
+    {
+        $event = Event::factory()->create();
+        $outsider = User::factory()->create();
+
+        try {
+            $this->actingAs($outsider)
+                ->withoutExceptionHandling()
+                ->get("/events/{$event->id}");
+            $this->fail('Expected an authorization failure.');
+        } catch (AuthorizationException $e) {
+            $this->assertSame("You're not part of this event.", $e->getMessage());
+        }
     }
 
     public function test_a_user_can_join_an_event_with_a_valid_code(): void

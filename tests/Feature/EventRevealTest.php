@@ -35,13 +35,17 @@ class EventRevealTest extends TestCase
         $this->actingAs($outsider)->get("/events/{$event->id}/reveal")->assertForbidden();
     }
 
-    public function test_the_reveal_is_forbidden_while_voting_is_open(): void
+    public function test_the_reveal_redirects_to_the_vote_while_voting_is_open(): void
     {
         $user = User::factory()->create();
         $event = Event::factory()->create(); // defaults to voting
         $event->attendees()->attach($user);
 
-        $this->actingAs($user)->get("/events/{$event->id}/reveal")->assertForbidden();
+        // Wrong phase, not a permission problem: an attendee who lands on the
+        // reveal too early is sent back to cast their ballot, with a flash.
+        $this->actingAs($user)->get("/events/{$event->id}/reveal")
+            ->assertRedirect(route('events.vote.edit', $event))
+            ->assertSessionHas('info');
     }
 
     public function test_an_attendee_sees_the_shortlist_when_closed(): void

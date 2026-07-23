@@ -14,7 +14,6 @@ use App\Support\SwipeResult;
 use App\Support\UserTaste;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -75,8 +74,6 @@ class EventController extends Controller
      */
     public function show(Request $request, Event $event): RedirectResponse
     {
-        Gate::authorize('view', $event);
-
         return $event->isClosed()
             ? redirect()->route('events.reveal', $event)
             : redirect()->route('events.vote.edit', $event);
@@ -88,8 +85,6 @@ class EventController extends Controller
      */
     public function hub(Request $request, Event $event): Response
     {
-        Gate::authorize('view', $event);
-
         $event->load(['creator', 'attendees']);
         $user = $request->user();
 
@@ -157,7 +152,13 @@ class EventController extends Controller
      */
     public function validate(Event $event): RedirectResponse
     {
-        Gate::authorize('validate', $event);
+        // Right (creator-only) is enforced by the `can:validate,event` middleware.
+        // Here we guard the *phase*: closing an already-closed event is a no-op,
+        // so send the host to the hub with a gentle note rather than 403.
+        if (! $event->isVoting()) {
+            return redirect()->route('events.hub', $event)
+                ->with('info', 'This event is already closed.');
+        }
 
         $event->update([
             'status' => EventStatus::Closed,
@@ -195,8 +196,6 @@ class EventController extends Controller
 
     public function destroy(Event $event): RedirectResponse
     {
-        Gate::authorize('delete', $event);
-
         $event->delete();
 
         return redirect()->route('events.index');
@@ -204,8 +203,6 @@ class EventController extends Controller
 
     public function leave(Request $request, Event $event): RedirectResponse
     {
-        Gate::authorize('leave', $event);
-
         $event->attendees()->detach($request->user()->id);
 
         return redirect()->route('events.index');

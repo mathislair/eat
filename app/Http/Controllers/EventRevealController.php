@@ -11,7 +11,6 @@ use App\Support\RestaurantMatcher;
 use App\Support\SwipeResult;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,10 +21,15 @@ class EventRevealController extends Controller
      * The Tinder-style reveal: a ranked shortlist to swipe through, plus where
      * the group currently stands.
      */
-    public function show(Request $request, Event $event): Response
+    public function show(Request $request, Event $event): Response|RedirectResponse
     {
-        Gate::authorize('view', $event);
-        abort_unless($event->isClosed(), 403, 'Voting is still open.');
+        // Right (member-only) is enforced by the `can:view,event` middleware.
+        // The reveal only exists once voting is closed; until then, send the
+        // attendee back to cast their ballot.
+        if (! $event->isClosed()) {
+            return redirect()->route('events.vote.edit', $event)
+                ->with('info', 'Voting is still open — cast your ballot first.');
+        }
 
         RestaurantMatcher::ensureFor($event);
 
@@ -77,8 +81,10 @@ class EventRevealController extends Controller
      */
     public function swipe(Request $request, Event $event): RedirectResponse
     {
-        Gate::authorize('view', $event);
-        abort_unless($event->isClosed(), 403, 'Voting is still open.');
+        if (! $event->isClosed()) {
+            return redirect()->route('events.vote.edit', $event)
+                ->with('info', 'Voting is still open — cast your ballot first.');
+        }
 
         $data = $request->validate([
             'restaurant_id' => [

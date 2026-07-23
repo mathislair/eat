@@ -1,5 +1,6 @@
 <script setup>
 import BottomNav from '@/Components/BottomNav.vue';
+import FlashToast from '@/Components/FlashToast.vue';
 import InstallPrompt from '@/Components/InstallPrompt.vue';
 </script>
 
@@ -27,6 +28,7 @@ import InstallPrompt from '@/Components/InstallPrompt.vue';
         </main>
 
         <InstallPrompt bottom-offset="calc(6rem + env(safe-area-inset-bottom))" />
+        <FlashToast />
         <BottomNav />
     </div>
 </template>

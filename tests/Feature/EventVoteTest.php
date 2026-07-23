@@ -40,6 +40,15 @@ class EventVoteTest extends TestCase
         $this->actingAs($outsider)->get("/events/{$event->id}/vote")->assertForbidden();
     }
 
+    public function test_opening_the_vote_page_after_close_redirects_to_the_reveal(): void
+    {
+        $user = User::factory()->create();
+        $event = $this->eventWithAttendee($user, ['status' => EventStatus::Closed, 'validated_at' => now()]);
+
+        $this->actingAs($user)->get("/events/{$event->id}/vote")
+            ->assertRedirect(route('events.reveal', $event));
+    }
+
     public function test_an_attendee_can_submit_a_ballot_with_preferences(): void
     {
         $user = User::factory()->create();
@@ -115,14 +124,21 @@ class EventVoteTest extends TestCase
         ])->assertForbidden();
     }
 
-    public function test_voting_is_rejected_once_the_event_is_closed(): void
+    public function test_voting_after_close_redirects_to_the_reveal_without_saving(): void
     {
         $user = User::factory()->create();
         $event = $this->eventWithAttendee($user, ['status' => EventStatus::Closed, 'validated_at' => now()]);
 
+        // A closed event is a phase, not a permission problem: the attendee is
+        // redirected onto the reveal (with a flash) rather than hitting a 403,
+        // and no ballot is recorded.
         $this->actingAs($user)->post("/events/{$event->id}/vote", [
             'nationalities' => [],
-        ])->assertForbidden();
+        ])
+            ->assertRedirect(route('events.reveal', $event))
+            ->assertSessionHas('info');
+
+        $this->assertDatabaseCount('event_votes', 0);
     }
 
     public function test_an_invalid_criteria_value_is_rejected(): void
@@ -170,6 +186,21 @@ class EventVoteTest extends TestCase
         $this->assertNotNull($event->validated_at);
     }
 
+    public function test_validating_an_already_closed_event_redirects_without_error(): void
+    {
+        $creator = User::factory()->create();
+        $event = Event::factory()->create([
+            'creator_id' => $creator->id,
+            'status' => EventStatus::Closed,
+            'validated_at' => now(),
+        ]);
+        $event->attendees()->attach($creator);
+
+        $this->actingAs($creator)->post("/events/{$event->id}/validate")
+            ->assertRedirect(route('events.hub', $event))
+            ->assertSessionHas('info');
+    }
+
     public function test_a_non_creator_cannot_validate_the_event(): void
     {
         $creator = User::factory()->create();
@@ -189,9 +220,12 @@ class EventVoteTest extends TestCase
 
         $this->actingAs($creator)->post("/events/{$event->id}/validate");
 
+        // Once frozen, a late ballot is turned away to the reveal, not saved.
         $this->actingAs($creator)->post("/events/{$event->id}/vote", [
             'nationalities' => [],
-        ])->assertForbidden();
+        ])->assertRedirect(route('events.reveal', $event));
+
+        $this->assertDatabaseCount('event_votes', 0);
     }
 
     public function test_results_are_hidden_while_voting(): void

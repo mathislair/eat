@@ -12,7 +12,8 @@ class StoreEventVoteRequest extends FormRequest
 
     public function authorize(): bool
     {
-        // Access is enforced by the `can:vote,event` route middleware.
+        // Authorisation is enforced by the `can:vote,event` route middleware
+        // (attendee-only); the voting-window phase is checked in the controller.
         return true;
     }
 
